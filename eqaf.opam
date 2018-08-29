@@ -14,7 +14,7 @@ build-test: [ "jbuilder" "runtest" "-p" name "-j" jobs ]
 depends: [
   "jbuilder"       {build}
   "core_bench"     {test}
-  "fmt"            {test}
+  "base-bytes"     {test}
 ]
 
 available: [ ocaml-version >= "4.03.0" ]
