@@ -34,9 +34,6 @@ let list_init n f =
     | n -> go (f n :: acc) (pred n) in
   go [] n
 
-let control = Gc.get ()
-(* let () = Gc.set { control with Gc.max_overhead = 100_001 } *)
-
 (* Core scope. *)
 
 open Core_bench
@@ -117,7 +114,7 @@ let times hashes_0 hashes_1 =
 module R = struct
   let hashes_0, hashes_1 =
     let same0 = random_hash digest_size 0 in
-    let same1 = Bytes.to_string (Bytes.of_string same0) in
+    let same1 = StdBytes.to_string (StdBytes.of_string same0) in
 
     assert (not (phys_equal same0 same1)); (* [eqst] short-cut this case. *)
 
@@ -190,10 +187,10 @@ let info ~name times =
     let r = deviation *. mean /. 100. in
 
     pr "---------- %s ----------\n%!" name
-  ; pr "min: %f.\n%!" min
-  ; pr "max: %f.\n%!" max
-  ; pr "mean: %f.\n%!" mean
-  ; pr "median: %f.\n%!" median
+  ; pr "min:       %f.\n%!" min
+  ; pr "max:       %f.\n%!" max
+  ; pr "mean:      %f.\n%!" mean
+  ; pr "median:    %f.\n%!" median
   ; pr "deviation: %f.\n%!" deviation
   ; pr "deviation: %f%%.\n%!" r
 
@@ -209,8 +206,14 @@ let () =
 
   ; let times_eqaf = List.map2_exn R.times_eqaf E.times_eqaf ~f:Float.sub in
     let times_eqst = List.map2_exn R.times_eqst E.times_eqst ~f:Float.sub in
+    let times_eqml = List.map2_exn R.times_eqml E.times_eqml ~f:Float.sub in
 
     pr "########## Total ##########\n%!"
   ; info ~name:"eqaf" times_eqaf
   ; info ~name:"eqst" times_eqst
+  ; info ~name:"eqml" times_eqml
+  ; let r = (deviation times_eqaf) *. (mean times_eqaf) /. 100. in
 
+    if r >= -10. && r <= 10.
+    then exit success
+    else exit failure
