@@ -215,5 +215,7 @@ let () =
   info ~name:"eqaf" times_eqaf ;
   info ~name:"eqst" times_eqst ;
   info ~name:"eqml" times_eqml ;
-  let r = deviation times_eqaf *. mean times_eqaf /. 100. in
-  if r >= -10. && r <= 10. then exit success else exit failure
+  let r0 = deviation times_eqaf *. mean times_eqaf /. 100. in
+  let r1 = deviation times_eqml *. mean times_eqml /. 100. in
+  if (r0 >= -10. && r0 <= 10.) && r1 >= -10. && r1 <= 10. then exit success
+  else exit failure
