@@ -19,18 +19,11 @@ let random_hash digest_size _ =
 
 let () = Random.self_init ()
 
-external eqaf : string -> string -> bool = "eqaf"
+let eqaf = Eqaf.C.equal
+
+let eqml = Eqaf.OCaml.equal
 
 external eqst : string -> string -> bool = "caml_string_equal"
-
-external string_get : string -> int -> int = "%string_unsafe_get"
-
-let eqml a b =
-  let rt = ref 0 in
-  for i = 0 to digest_size - 1 do
-    rt := !rt lor (string_get a i lxor string_get b i)
-  done ;
-  !rt = 0
 
 module StdBytes = Bytes
 module StdArray = Array
