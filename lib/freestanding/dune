@@ -1,0 +1,14 @@
+(library
+ (name eqaf_freestanding)
+ (public_name eqaf.freestanding)
+ (optional)
+ (libraries mirage-solo5)
+ (c_names safeq)
+ (c_flags (:include cflags.sexp)))
+
+(rule (copy# ../safeq.c safeq.c))
+
+(rule
+ (targets cflags.sexp)
+ (deps (:script cflags.sh))
+ (action (bash "./%{script} > %{targets}")))
