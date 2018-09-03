@@ -19,9 +19,23 @@ let random_hash digest_size _ =
 
 let () = Random.self_init ()
 
-let eqaf = Eqaf.C.equal
+let eqaf = Eqaf.equal
 
-let eqml = Eqaf.OCaml.equal
+(* XXX(dinosaure): it's a translation of [eqst] (C code) to OCaml. This snippet
+   has expected results on GNU/Linux but it's not the case on Mac OSX for some
+   weirds reasons. *)
+
+external string_get : string -> int -> int = "%string_unsafe_get" [@@noalloc]
+
+let eqml a b =
+  let ln = String.length a in
+  if ln = String.length b then (
+    let rt = ref 0 in
+    for i = 0 to ln - 1 do
+      rt := !rt lor (string_get a i lxor string_get b i)
+    done ;
+    !rt = 0 )
+  else false
 
 external eqst : string -> string -> bool = "caml_string_equal"
 
@@ -215,7 +229,6 @@ let () =
   info ~name:"eqaf" times_eqaf ;
   info ~name:"eqst" times_eqst ;
   info ~name:"eqml" times_eqml ;
-  let r0 = deviation times_eqaf *. mean times_eqaf /. 100. in
-  let r1 = deviation times_eqml *. mean times_eqml /. 100. in
-  if (r0 >= -10. && r0 <= 10.) && r1 >= -10. && r1 <= 10. then exit success
+  let r = deviation times_eqaf *. mean times_eqaf /. 100. in
+  if (r >= -10. && r <= 10.) && r >= -10. && r <= 10. then exit success
   else exit failure
