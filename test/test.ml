@@ -52,8 +52,10 @@ let list_init n f =
 (* Core scope. *)
 
 open Core_bench
-open Core.Std [@@warning "-3"]
+open Core.Std [@@warning "-3-33"]
 open Core
+
+[@@@warning "-6"]
 
 (* Random test *)
 

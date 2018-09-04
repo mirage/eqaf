@@ -1,6 +1,0 @@
-(library
- ((name eqaf)
-  (public_name eqaf)
-  (modules (eqaf))
-  (c_names (safeq))
-  (c_flags (-I.))))

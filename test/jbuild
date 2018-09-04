@@ -1,9 +1,0 @@
-(executable
- ((name test)
-  (modules (test))
-  (libraries (core_bench eqaf))))
-
-(alias
- ((name runtest)
-  (deps (test.exe))
-  (action (run ${<}))))
