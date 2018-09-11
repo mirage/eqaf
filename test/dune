@@ -1,7 +1,15 @@
+(library
+ (name bench_linux_toolkit)
+ (modules bench_linux_toolkit clock_linux perf_linux)
+ (optional true)
+ (c_names clock_linux_stubs perf_linux_stubs)
+ (libraries unix fmt)
+ (c_flags -lrt -lpthread))
+
 (executable
  (name test)
  (modules test)
- (libraries core_bench eqaf))
+ (libraries eqaf fmt bench_linux_toolkit))
 
 (alias
  (name runtest)

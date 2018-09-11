@@ -18,7 +18,7 @@ build-test: [
 
 depends: [
   "dune"           {build}
-  "core_bench"     {test}
+  "fmt"            {test}
   "base-bytes"     {test}
 ]
 
