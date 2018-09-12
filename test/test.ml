@@ -567,8 +567,8 @@ module Bench (Clock : CLOCK) (Perf : PERF) = struct
         match sampling with
         | `Linear k -> current_run + k
         | `Geometric scale ->
-            let n = Float.of_int current_run *. scale in
-            max (Float.to_int n) (current_run + 1)
+            let n = float_of_int current_run *. scale in
+            max (int_of_float n) (current_run + 1)
       in
       run := next
     done ;
@@ -739,11 +739,11 @@ let mean = function
 let median lst =
   let arr = Array.of_list lst in
   let len = Array.length arr in
-  Array.sort Float.compare arr ;
+  Array.sort Pervasives.compare arr ;
   (arr.((len - 1) / 2) +. arr.(len / 2)) /. 2.
 
 let variance lst =
-  let n = Float.of_int (List.length lst - 1) in
+  let n = float_of_int (List.length lst - 1) in
   let m = mean lst in
   let e = List.fold_left (fun a x -> a +. ((x -. m) *. (x -. m))) 0. lst in
   sqrt (1. /. n *. e)
@@ -765,12 +765,12 @@ let list_max_elt compare lst =
     None lst
 
 let min lst =
-  match list_min_elt Float.compare lst with
+  match list_min_elt Pervasives.compare lst with
   | Some v -> v
   | None -> invalid_arg "min: empty list"
 
 let max lst =
-  match list_max_elt Float.compare lst with
+  match list_max_elt Pervasives.compare lst with
   | Some v -> v
   | None -> invalid_arg "max: empty list"
 
@@ -806,9 +806,9 @@ module Main (Clock : CLOCK) (Perf : PERF) = struct
     info ~name:"eqaf" E.times_eqaf ;
     info ~name:"eqst" E.times_eqst ;
     info ~name:"eqml" E.times_eqml ;
-    let times_eqaf = List.map2 Float.sub R.times_eqaf E.times_eqaf in
-    let times_eqst = List.map2 Float.sub R.times_eqst E.times_eqst in
-    let times_eqml = List.map2 Float.sub R.times_eqml E.times_eqml in
+    let times_eqaf = List.map2 ( -. ) R.times_eqaf E.times_eqaf in
+    let times_eqst = List.map2 ( -. ) R.times_eqst E.times_eqst in
+    let times_eqml = List.map2 ( -. ) R.times_eqml E.times_eqml in
     Fmt.pr "########## Total ##########\n%!" ;
     info ~name:"eqaf" times_eqaf ;
     info ~name:"eqst" times_eqst ;
