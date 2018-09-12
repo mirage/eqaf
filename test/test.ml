@@ -1,5 +1,12 @@
 let () = Printexc.record_backtrace true
 
+let list_init n f =
+  let rec go acc = function
+    | 0 -> List.rev acc
+    | n -> go (f (pred n) :: acc) (pred n)
+  in
+  go [] n
+
 module type CLOCK = sig
   type kind =
     [ `Realtime
@@ -649,35 +656,35 @@ module Make (Clock : CLOCK) (Perf : PERF) = struct
   module Coefficient = Coefficient (Clock) (Perf)
 
   let bench_eqaf hashes_0 hashes_1 n =
-    Test.make_indexed ~name:"eqaf" ~args:(List.init n (fun x -> x))
+    Test.make_indexed ~name:"eqaf" ~args:(list_init n (fun x -> x))
     @@ fun i ->
     let a = hashes_0.(i) in
     let b = hashes_1.(i) in
     Staged.stage (fun () -> eqaf a b)
 
   let bench_eqst hashes_0 hashes_1 n =
-    Test.make_indexed ~name:"eqst" ~args:(List.init n (fun x -> x))
+    Test.make_indexed ~name:"eqst" ~args:(list_init n (fun x -> x))
     @@ fun i ->
     let a = hashes_0.(i) in
     let b = hashes_1.(i) in
     Staged.stage (fun () -> eqst a b)
 
   let bench_eqml hashes_0 hashes_1 n =
-    Test.make_indexed ~name:"eqml" ~args:(List.init n (fun x -> x))
+    Test.make_indexed ~name:"eqml" ~args:(list_init n (fun x -> x))
     @@ fun i ->
     let a = hashes_0.(i) in
     let b = hashes_1.(i) in
     Staged.stage (fun () -> eqml a b)
 
   let bench_eqnt hashes_0 hashes_1 n =
-    Test.make_indexed ~name:"eqnt" ~args:(List.init n (fun x -> x))
+    Test.make_indexed ~name:"eqnt" ~args:(list_init n (fun x -> x))
     @@ fun i ->
     let a = hashes_0.(i) in
     let b = hashes_1.(i) in
     Staged.stage (fun () -> eqnt a b)
 
   let bench_eqbg hashes_0 hashes_1 n =
-    Test.make_indexed ~name:"eqbg" ~args:(List.init n (fun x -> x))
+    Test.make_indexed ~name:"eqbg" ~args:(list_init n (fun x -> x))
     @@ fun i ->
     let a = hashes_0.(i) in
     let b = hashes_1.(i) in
