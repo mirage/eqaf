@@ -602,6 +602,36 @@ let eqml a b =
 
 external eqst : string -> string -> bool = "caml_string_equal"
 
+let eqnt a b =
+  let len = min (String.length a) (String.length b) in
+  let res = ref 0n in
+  let get_int i s = Nativeint.of_int (int_of_char (String.unsafe_get s i)) in
+  for i = 0 to pred len do
+    res := Nativeint.logor !res (Nativeint.logxor (get_int i a) (get_int i b))
+  done ;
+  String.length a = String.length b && !res = 0n
+
+external unsafe_string_get_64 : string -> int -> int64 = "%caml_string_get64u"
+
+let eqbg a b =
+  let len = min (String.length a) (String.length b) in
+  let res = ref 0L in
+  for i = 0 to pred (len / 8) do
+    res :=
+      Int64.logor !res
+        (Int64.logxor
+           (unsafe_string_get_64 a (i * 8))
+           (unsafe_string_get_64 a (i * 8)))
+  done ;
+  for i = len - (len mod 8) to pred len do
+    res :=
+      Int64.logor !res
+        (Int64.logxor
+           (Int64.of_int (unsafe_string_get a i))
+           (Int64.of_int (unsafe_string_get b i)))
+  done ;
+  String.length a = String.length b && !res = 0L
+
 let random_hash digest_size _ =
   let get _ =
     match Random.int (10 + 26 + 26) with
@@ -639,24 +669,42 @@ module Make (Clock : CLOCK) (Perf : PERF) = struct
     let b = hashes_1.(i) in
     Staged.stage (fun () -> eqml a b)
 
+  let bench_eqnt hashes_0 hashes_1 n =
+    Test.make_indexed ~name:"eqnt" ~args:(List.init n (fun x -> x))
+    @@ fun i ->
+    let a = hashes_0.(i) in
+    let b = hashes_1.(i) in
+    Staged.stage (fun () -> eqnt a b)
+
+  let bench_eqbg hashes_0 hashes_1 n =
+    Test.make_indexed ~name:"eqbg" ~args:(List.init n (fun x -> x))
+    @@ fun i ->
+    let a = hashes_0.(i) in
+    let b = hashes_1.(i) in
+    Staged.stage (fun () -> eqbg a b)
+
   let measurements ~configs hashes_0 hashes_1 n =
     Bench.measure_all ~configs ~quota:1000000000L ~sampling:(`Geometric 1.01)
       [ bench_eqaf hashes_0 hashes_1 n
       ; bench_eqst hashes_0 hashes_1 n
-      ; bench_eqml hashes_0 hashes_1 n ]
+      ; bench_eqml hashes_0 hashes_1 n
+      ; bench_eqnt hashes_0 hashes_1 n
+      ; bench_eqbg hashes_0 hashes_1 n ]
 
   let measure_and_analyze ~configs hashes_0 hashes_1 n =
     List.map
       (fun m -> List.map (fun config -> Analyze.analyze config m) configs)
       (measurements ~configs hashes_0 hashes_1 n)
 
-  type kind = Eqaf | Eqst | Eqml
+  type kind = Eqaf | Eqst | Eqml | Eqnt | Eqbg
 
   let kind_of_string name =
     match String.sub name 0 4 with
     | "eqaf" -> Eqaf
     | "eqst" -> Eqst
     | "eqml" -> Eqml
+    | "eqnt" -> Eqnt
+    | "eqbg" -> Eqbg
     | _ -> invalid_arg "kind_of_string"
 
   let is_eqaf = function Eqaf, _ -> true | _ -> false
@@ -664,6 +712,10 @@ module Make (Clock : CLOCK) (Perf : PERF) = struct
   let is_eqml = function Eqml, _ -> true | _ -> false
 
   let is_eqst = function Eqst, _ -> true | _ -> false
+
+  let is_eqnt = function Eqnt, _ -> true | _ -> false
+
+  let is_eqbg = function Eqbg, _ -> true | _ -> false
 
   let times hashes_0 hashes_1 n =
     let configs = [Config.run_vs_time] in
@@ -707,6 +759,10 @@ module R (Clock : CLOCK) (Perf : PERF) = struct
   let times_eqst = List.filter is_eqst times |> List.map snd
 
   let times_eqml = List.filter is_eqml times |> List.map snd
+
+  let times_eqnt = List.filter is_eqnt times |> List.map snd
+
+  let times_eqbg = List.filter is_eqbg times |> List.map snd
 end
 
 module E (Clock : CLOCK) (Perf : PERF) = struct
@@ -726,6 +782,10 @@ module E (Clock : CLOCK) (Perf : PERF) = struct
   let times_eqst = List.filter is_eqst times |> List.map snd
 
   let times_eqml = List.filter is_eqml times |> List.map snd
+
+  let times_eqnt = List.filter is_eqnt times |> List.map snd
+
+  let times_eqbg = List.filter is_eqbg times |> List.map snd
 end
 
 let mean = function
@@ -802,17 +862,25 @@ module Main (Clock : CLOCK) (Perf : PERF) = struct
     info ~name:"eqaf" R.times_eqaf ;
     info ~name:"eqst" R.times_eqst ;
     info ~name:"eqml" R.times_eqml ;
+    info ~name:"eqnt" R.times_eqnt ;
+    info ~name:"eqbg" R.times_eqbg ;
     Fmt.pr "########## Equal ##########\n%!" ;
     info ~name:"eqaf" E.times_eqaf ;
     info ~name:"eqst" E.times_eqst ;
     info ~name:"eqml" E.times_eqml ;
+    info ~name:"eqnt" E.times_eqnt ;
+    info ~name:"eqbg" E.times_eqbg ;
     let times_eqaf = List.map2 ( -. ) R.times_eqaf E.times_eqaf in
     let times_eqst = List.map2 ( -. ) R.times_eqst E.times_eqst in
     let times_eqml = List.map2 ( -. ) R.times_eqml E.times_eqml in
+    let times_eqnt = List.map2 ( -. ) R.times_eqnt E.times_eqnt in
+    let times_eqbg = List.map2 ( -. ) R.times_eqbg E.times_eqbg in
     Fmt.pr "########## Total ##########\n%!" ;
     info ~name:"eqaf" times_eqaf ;
     info ~name:"eqst" times_eqst ;
     info ~name:"eqml" times_eqml ;
+    info ~name:"eqnt" times_eqnt ;
+    info ~name:"eqbg" times_eqbg ;
     let r = deviation times_eqaf *. mean times_eqaf /. 100. in
     if (r >= -10. && r <= 10.) && r >= -10. && r <= 10. then exit success
     else exit failure
