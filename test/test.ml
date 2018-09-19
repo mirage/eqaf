@@ -691,7 +691,7 @@ module Make (Clock : CLOCK) (Perf : PERF) = struct
     Staged.stage (fun () -> eqbg a b)
 
   let measurements ~configs hashes_0 hashes_1 n =
-    Bench.measure_all ~configs ~quota:1000000000L ~sampling:(`Geometric 1.01)
+    Bench.measure_all ~configs ~quota:2000000000L ~sampling:(`Geometric 1.01)
       [ bench_eqaf hashes_0 hashes_1 n
       ; bench_eqst hashes_0 hashes_1 n
       ; bench_eqml hashes_0 hashes_1 n
