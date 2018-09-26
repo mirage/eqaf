@@ -19,7 +19,7 @@ let () =
           let system =
             match system with
             | "linux" -> `Linux
-            | "windows" -> `Windows
+            | "windows" | "mingw64" -> `Windows
             | "macosx" -> `Macosx
             | v -> invalid_arg "Invalid argument of system option: %s" v
           in
