@@ -1,3 +1,15 @@
+#include <caml/mlvalues.h>
+#include <caml/alloc.h>
+#include <caml/address_class.h>
+#include <caml/fail.h>
+#include <caml/io.h>
+#include <caml/memory.h>
+#include <caml/misc.h>
+#include <caml/osdeps.h>
+#include <caml/signals.h>
+#include <caml/sys.h>
+#include <caml/startup_aux.h>
+
 #include <wtypes.h>
 #include <winbase.h>
 #include <stdlib.h>
@@ -12,31 +24,21 @@
 #include <string.h>
 #include <signal.h>
 
-#include "caml/alloc.h"
-#include "caml/address_class.h"
-#include "caml/fail.h"
-#include "caml/io.h"
-#include "caml/memory.h"
-#include "caml/misc.h"
-#include "caml/osdeps.h"
-#include "caml/signals.h"
-#include "caml/sys.h"
-#include "caml/startup_aux.h"
-
 static LARGE_INTEGER frequency;
 
 CAMLprim value
-clock_windows_init(value __unused(unit))
+clock_windows_init(value unit)
 {
   QueryPerformanceFrequency(&frequency);
   frequency.QuadPart = 1000000000L / frequency.QuadPart;
 
-  CAMLreturn(Val_unit);
+  return Val_unit;
 }
 
 CAMLprim value
-clock_windows_get_time(value __unused(unit))
+clock_windows_get_time(value unit)
 {
+  CAMLparam0();
   CAMLlocal1(res);
   LARGE_INTEGER now;
 
