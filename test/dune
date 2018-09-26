@@ -1,15 +1,23 @@
+(rule
+ (targets clock.ml clock_stubs.c clock.sexp)
+ (deps (:select select/select.ml)
+       clock_linux.ml
+       clock_linux_stubs.c
+       clock_windows.ml
+       clock_windows_stubs.c)
+ (action (run %{ocaml} %{select} --system %{ocaml-config:system} -o clock)))
+
 (library
- (name bench_linux_toolkit)
- (modules bench_linux_toolkit clock_linux perf_linux)
- (optional true)
- (c_names clock_linux_stubs perf_linux_stubs)
- (libraries unix fmt)
- (c_flags -lrt -lpthread))
+ (name clock)
+ (modules clock)
+ (c_names clock_stubs)
+ (libraries fmt)
+ (c_flags (:include clock.sexp)))
 
 (executable
  (name test)
  (modules test)
- (libraries eqaf fmt bench_linux_toolkit))
+ (libraries eqaf fmt clock))
 
 (alias
  (name runtest)
