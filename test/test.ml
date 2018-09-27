@@ -37,77 +37,10 @@ module type CLOCK = sig
   module Map : Map.S with type key = kind
 end
 
-module type PERF = sig
-  type kind =
-    [ `Cycles
-    | `Instructions
-    | `Cache_references
-    | `Cache_misses
-    | `Branch_instructions
-    | `Branch_misses
-    | `Bus_cycles
-    | `Stalled_cycles_frontend
-    | `Stalled_cycles_backend
-    | `Ref_cpu_cycles
-    | `Cpu_clock
-    | `Task_clock
-    | `Page_faults
-    | `Context_switches
-    | `Cpu_migrations
-    | `Page_faults_min
-    | `Page_faults_maj
-    | `Alignement_faults
-    | `Emulation_faults
-    | `Dummy ]
-
-  val pp_kind : kind Fmt.t
-
-  module Attr : sig
-    type t
-
-    type flag =
-      [ `Disabled
-      | `Inherit
-      | `Exclude_user
-      | `Exclude_kernel
-      | `Exclude_hv
-      | `Exclude_idle
-      | `Enable_on_exec ]
-
-    val make : ?flags:flag list -> kind -> t
-  end
-
-  type t
-
-  type flag = [`Fd_cloexec | `Fd_no_group | `Fd_output | `Pid_cgroup]
-
-  val make :
-    ?pid:int -> ?cpu:int -> ?group:t -> ?flags:flag list -> Attr.t -> t
-
-  val enable : t -> unit
-
-  val disable : t -> unit
-
-  val read : t -> int64
-
-  val kind_to_string : kind -> string
-
-  val kind_to_int : kind -> int
-
-  val string_to_kind : string -> kind
-
-  val int_to_kind : int -> kind
-
-  module Set : Set.S with type elt = kind
-
-  module Map : Map.S with type key = kind
-end
-
-module Field (Clock : CLOCK) (Perf : PERF) = struct
+module Field (Clock : CLOCK) = struct
   type t =
     [ `Run
     | `Time of Clock.kind
-    | `Perf of Perf.kind
     | `Minor_collection
     | `Major_collection
     | `Compaction
@@ -124,14 +57,12 @@ module Field (Clock : CLOCK) (Perf : PERF) = struct
     | `Major_allocated -> 5
     | `Promoted -> 6
     | `Time kind -> 7 + Clock.kind_to_int kind
-    | `Perf kind -> 7 + Clock.max + Perf.kind_to_int kind
 
   let compare a b = to_int a - to_int b
 
   let pp ppf = function
     | `Run -> Fmt.string ppf "run"
     | `Time time -> Clock.pp_kind ppf time
-    | `Perf perf -> Perf.pp_kind ppf perf
     | `Minor_collection -> Fmt.string ppf "minor-collection"
     | `Major_collection -> Fmt.string ppf "major-collection"
     | `Compaction -> Fmt.string ppf "compaction"
@@ -146,13 +77,12 @@ module Field (Clock : CLOCK) (Perf : PERF) = struct
   end)
 end
 
-module Measurement_raw (Clock : CLOCK) (Perf : PERF) = struct
-  module Field = Field (Clock) (Perf)
+module Measurement_raw (Clock : CLOCK) = struct
+  module Field = Field (Clock)
 
   type t =
     { mutable run: int
     ; mutable time: int64 Clock.Map.t
-    ; mutable perf: int64 Perf.Map.t
     ; mutable compaction: int
     ; mutable minor_allocated: float
     ; mutable major_allocated: float
@@ -162,21 +92,18 @@ module Measurement_raw (Clock : CLOCK) (Perf : PERF) = struct
 
   let pp ppf t =
     Fmt.pf ppf
-      "{ @[<hov>run = %d;@ time = @[%a@];@ perf = @[%a@]; compaction = %d;@ \
-       minor_allocated = %f;@ major_allocated = %f;@ promoted = %f;@ \
-       major_collection = %d;@ minor_collection = %d;@] }"
+      "{ @[<hov>run = %d;@ time = @[%a@];@ compaction = %d;@ minor_allocated \
+       = %f;@ major_allocated = %f;@ promoted = %f;@ major_collection = %d;@ \
+       minor_collection = %d;@] }"
       t.run
       Fmt.(Dump.list (Dump.pair Clock.pp_kind int64))
       (Clock.Map.bindings t.time)
-      Fmt.(Dump.list (Dump.pair Perf.pp_kind int64))
-      (Perf.Map.bindings t.perf) t.compaction t.minor_allocated
-      t.major_allocated t.promoted t.major_collection t.minor_collection
+      t.compaction t.minor_allocated t.major_allocated t.promoted
+      t.major_collection t.minor_collection
 
   let run {run; _} = run
 
   let time kind {time; _} = Clock.Map.find kind time
-
-  let perf kind {perf; _} = Perf.Map.find kind perf
 
   let compaction {compaction; _} = compaction
 
@@ -195,7 +122,6 @@ module Measurement_raw (Clock : CLOCK) (Perf : PERF) = struct
   let make () =
     { run= 0
     ; time= Clock.Map.empty
-    ; perf= Perf.Map.empty
     ; compaction= 0
     ; minor_allocated= 0.
     ; major_allocated= 0.
@@ -206,7 +132,6 @@ module Measurement_raw (Clock : CLOCK) (Perf : PERF) = struct
   let accessor = function
     | `Run -> float_of_int <.> run
     | `Time kind -> Int64.to_float <.> time kind
-    | `Perf kind -> Int64.to_float <.> perf kind
     | `Compaction -> float_of_int <.> compaction
     | `Minor_allocated -> minor_allocated
     | `Major_allocated -> major_allocated
@@ -310,8 +235,8 @@ module Linear_algebra = struct
     triu_solve r (mul_mv ~trans:true q b)
 end
 
-module Config (Clock : CLOCK) (Perf : PERF) = struct
-  module Field = Field (Clock) (Perf)
+module Config (Clock : CLOCK) = struct
+  module Field = Field (Clock)
 
   type t = {responder: Field.t; predictors: Field.Set.t}
 
@@ -325,11 +250,11 @@ module Config (Clock : CLOCK) (Perf : PERF) = struct
     {responder= `Run; predictors= Field.Set.of_list [`Time `Monotonic]}
 end
 
-module Measures (Clock : CLOCK) (Perf : PERF) = struct
-  module Field = Field (Clock) (Perf)
-  module Config = Config (Clock) (Perf)
+module Measures (Clock : CLOCK) = struct
+  module Field = Field (Clock)
+  module Config = Config (Clock)
 
-  type t = {clock: Clock.Set.t; perf: Perf.Set.t}
+  type t = {clock: Clock.Set.t}
 
   let all =
     let all_clock =
@@ -342,75 +267,48 @@ module Measures (Clock : CLOCK) (Perf : PERF) = struct
       ; `Process_cpu_time
       ; `Thread_cpu_time ]
     in
-    let all_perf =
-      [ `Cycles
-      ; `Instructions
-      ; `Cache_references
-      ; `Cache_misses
-      ; `Branch_instructions
-      ; `Branch_misses
-      ; `Bus_cycles
-      ; `Stalled_cycles_frontend
-      ; `Stalled_cycles_backend
-      ; `Ref_cpu_cycles
-      ; `Cpu_clock
-      ; `Task_clock
-      ; `Page_faults
-      ; `Context_switches
-      ; `Cpu_migrations
-      ; `Page_faults_min
-      ; `Page_faults_maj
-      ; `Alignement_faults
-      ; `Emulation_faults
-      ; `Dummy ]
-    in
-    {clock= Clock.Set.of_list all_clock; perf= Perf.Set.of_list all_perf}
+    {clock= Clock.Set.of_list all_clock}
 
-  let pp ppf {clock; perf} =
-    Fmt.pf ppf "{ @[<hov>clock = @[%a@];@ perf = @[%a@];@] }"
+  let pp ppf {clock} =
+    Fmt.pf ppf "{ @[<hov>clock = @[%a@];@] }"
       Fmt.(Dump.list Clock.pp_kind)
       (Clock.Set.elements clock)
-      Fmt.(Dump.list Perf.pp_kind)
-      (Perf.Set.elements perf)
 
   let of_config {Config.predictors; _} =
     List.fold_left
-      (fun {clock; perf} -> function
-        | `Time v -> {clock= Clock.Set.add v clock; perf}
-        | `Perf v -> {perf= Perf.Set.add v perf; clock} | _ -> {clock; perf} )
-      {clock= Clock.Set.empty; perf= Perf.Set.empty}
+      (fun {clock} -> function `Time v -> {clock= Clock.Set.add v clock}
+        | _ -> {clock} )
+      {clock= Clock.Set.empty}
       (Field.Set.fold (fun x a -> x :: a) predictors [])
 
   let of_configs configs =
     List.fold_left
       (fun acc config ->
-        let {clock; perf} = of_config config in
-        { clock= Clock.Set.fold Clock.Set.add acc.clock clock
-        ; perf= Perf.Set.fold Perf.Set.add acc.perf perf } )
-      {clock= Clock.Set.empty; perf= Perf.Set.empty}
-      configs
+        let {clock} = of_config config in
+        {clock= Clock.Set.fold Clock.Set.add acc.clock clock} )
+      {clock= Clock.Set.empty} configs
 end
 
-module Measurement (Clock : CLOCK) (Perf : PERF) = struct
-  module Measurement_raw = Measurement_raw (Clock) (Perf)
+module Measurement (Clock : CLOCK) = struct
+  module Measurement_raw = Measurement_raw (Clock)
 
   type t = {name: string; raw: Measurement_raw.t array}
 end
 
-module Coefficient (Clock : CLOCK) (Perf : PERF) = struct
-  module Field = Field (Clock) (Perf)
+module Coefficient (Clock : CLOCK) = struct
+  module Field = Field (Clock)
 
   type t = {predictor: Field.t; estimate: float}
 
   let make ~predictor estimate = {predictor; estimate}
 end
 
-module Analyze (Clock : CLOCK) (Perf : PERF) = struct
-  module Field = Field (Clock) (Perf)
-  module Config = Config (Clock) (Perf)
-  module Measurement_raw = Measurement_raw (Clock) (Perf)
-  module Measurement = Measurement (Clock) (Perf)
-  module Coefficient = Coefficient (Clock) (Perf)
+module Analyze (Clock : CLOCK) = struct
+  module Field = Field (Clock)
+  module Config = Config (Clock)
+  module Measurement_raw = Measurement_raw (Clock)
+  module Measurement = Measurement (Clock)
+  module Coefficient = Coefficient (Clock)
 
   let make_matrix_and_vector ~responder ~predictors m =
     let predictors_acc = Array.map Measurement_raw.accessor predictors in
@@ -449,7 +347,7 @@ module Staged = struct
   external unstage : 'a t -> 'a = "%identity"
 end
 
-module Test (Clock : CLOCK) (Perf : PERF) = struct
+module Test (Clock : CLOCK) = struct
   type packed = T : ([`Init] -> unit -> 'a) -> packed
 
   type basic = {name: string; fn: packed}
@@ -466,14 +364,14 @@ module Test (Clock : CLOCK) (Perf : PERF) = struct
           args }
 end
 
-module Bench (Clock : CLOCK) (Perf : PERF) = struct
-  module Field = Field (Clock) (Perf)
-  module Config = Config (Clock) (Perf)
-  module Measures = Measures (Clock) (Perf)
-  module Measurement_raw = Measurement_raw (Clock) (Perf)
-  module Measurement = Measurement (Clock) (Perf)
-  module Test = Test (Clock) (Perf)
-  module Analyze = Analyze (Clock) (Perf)
+module Bench (Clock : CLOCK) = struct
+  module Field = Field (Clock)
+  module Config = Config (Clock)
+  module Measures = Measures (Clock)
+  module Measurement_raw = Measurement_raw (Clock)
+  module Measurement = Measurement (Clock)
+  module Test = Test (Clock)
+  module Analyze = Analyze (Clock)
 
   let stabilize () =
     let rec loop fail last_heap_live_words =
@@ -514,15 +412,8 @@ module Bench (Clock : CLOCK) (Perf : PERF) = struct
       if current_run = 0 then stabilize () ;
       let times_0 = Array.make (Array.length times_i) 0L in
       let times_1 = Array.make (Array.length times_i) 0L in
-      let tags =
-        List.map
-          (fun kind -> Perf.(make (Attr.make kind)))
-          (Perf.Set.fold (fun x a -> x :: a) measures.Measures.perf [])
-        |> Array.of_list
-      in
-      (* GC, PERF, CLOCK *)
+      (* GC, CLOCK *)
       let stat_0 = Gc.quick_stat () in
-      Array.iter Perf.enable tags ;
       Array.iteri
         (fun i x -> times_0.(i) <- Clock.(get (int_to_kind x)))
         times_i ;
@@ -534,9 +425,8 @@ module Bench (Clock : CLOCK) (Perf : PERF) = struct
       Array.iteri
         (fun i x -> times_1.(i) <- Clock.(get (int_to_kind x)))
         times_i ;
-      Array.iter Perf.disable tags ;
       let stat_1 = Gc.quick_stat () in
-      (* CLOCK, PERF, GC *)
+      (* CLOCK, GC *)
       let _, times =
         Array.fold_left
           (fun (i, m) x ->
@@ -544,19 +434,9 @@ module Bench (Clock : CLOCK) (Perf : PERF) = struct
           (0, Clock.Map.empty)
           (Array.map2 Int64.sub times_1 times_0)
       in
-      let perfs =
-        Array.fold_left
-          (fun m (k, t) -> Perf.Map.add k (Perf.read t) m)
-          Perf.Map.empty
-          (Array.map2 ( <*> )
-             (Array.of_list
-                (Perf.Set.fold (fun x a -> x :: a) measures.Measures.perf []))
-             tags)
-      in
       let result = results.(current_index) in
       result.Measurement_raw.run <- current_run ;
       result.Measurement_raw.time <- times ;
-      result.Measurement_raw.perf <- perfs ;
       result.Measurement_raw.minor_allocated
       <- stat_1.Gc.minor_words -. stat_0.Gc.minor_words ;
       result.Measurement_raw.major_allocated
@@ -648,12 +528,12 @@ let random_hash digest_size _ =
   in
   String.init digest_size get
 
-module Make (Clock : CLOCK) (Perf : PERF) = struct
-  module Config = Config (Clock) (Perf)
-  module Test = Test (Clock) (Perf)
-  module Analyze = Analyze (Clock) (Perf)
-  module Bench = Bench (Clock) (Perf)
-  module Coefficient = Coefficient (Clock) (Perf)
+module Make (Clock : CLOCK) = struct
+  module Config = Config (Clock)
+  module Test = Test (Clock)
+  module Analyze = Analyze (Clock)
+  module Bench = Bench (Clock)
+  module Coefficient = Coefficient (Clock)
 
   let bench_eqaf hashes_0 hashes_1 n =
     Test.make_indexed ~name:"eqaf" ~args:(list_init n (fun x -> x))
@@ -691,7 +571,7 @@ module Make (Clock : CLOCK) (Perf : PERF) = struct
     Staged.stage (fun () -> eqbg a b)
 
   let measurements ~configs hashes_0 hashes_1 n =
-    Bench.measure_all ~configs ~quota:2000000000L ~sampling:(`Geometric 1.01)
+    Bench.measure_all ~configs ~quota:1000000000L ~sampling:(`Geometric 1.01)
       [ bench_eqaf hashes_0 hashes_1 n
       ; bench_eqst hashes_0 hashes_1 n
       ; bench_eqml hashes_0 hashes_1 n
@@ -739,8 +619,8 @@ let digest_size = 4096
 
 let tests = 50
 
-module R (Clock : CLOCK) (Perf : PERF) = struct
-  module Make = Make (Clock) (Perf)
+module R (Clock : CLOCK) = struct
+  module Make = Make (Clock)
   open Make
 
   let hashes_0, hashes_1 =
@@ -772,8 +652,8 @@ module R (Clock : CLOCK) (Perf : PERF) = struct
   let times_eqbg = List.filter is_eqbg times |> List.map snd
 end
 
-module E (Clock : CLOCK) (Perf : PERF) = struct
-  module Make = Make (Clock) (Perf)
+module E (Clock : CLOCK) = struct
+  module Make = Make (Clock)
   open Make
 
   let hashes_0, hashes_1 =
@@ -860,9 +740,9 @@ let info ~name times =
   Fmt.pr "deviation: %f.\n%!" deviation ;
   Fmt.pr "deviation: %f%%.\n%!" r
 
-module Main (Clock : CLOCK) (Perf : PERF) = struct
-  module E = E (Clock) (Perf)
-  module R = R (Clock) (Perf)
+module Main (Clock : CLOCK) = struct
+  module E = E (Clock)
+  module R = R (Clock)
 
   let main () =
     Fmt.pr "########## Random ##########\n%!" ;
@@ -893,7 +773,6 @@ module Main (Clock : CLOCK) (Perf : PERF) = struct
     else exit failure
 end
 
-open Bench_linux_toolkit
-module X = Main (Clock) (Perf)
+module X = Main (Clock)
 
 let () = X.main ()
