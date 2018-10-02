@@ -744,6 +744,9 @@ module Main (Clock : CLOCK) = struct
   module E = E (Clock)
   module R = R (Clock)
 
+  let float_is_zero f =
+    match classify_float f with FP_zero | FP_subnormal -> true | _ -> false
+
   let main () =
     Fmt.pr "########## Random ##########\n%!" ;
     info ~name:"eqaf" R.times_eqaf ;
@@ -768,9 +771,8 @@ module Main (Clock : CLOCK) = struct
     info ~name:"eqml" times_eqml ;
     info ~name:"eqnt" times_eqnt ;
     info ~name:"eqbg" times_eqbg ;
-    let r = deviation times_eqaf *. mean times_eqaf /. 100. in
-    if (r >= -10. && r <= 10.) && r >= -10. && r <= 10. then exit success
-    else exit failure
+    let r = deviation times_eqml *. mean times_eqml /. 100. in
+    if -0.000001 < r && r < 0.000001 then exit success else exit failure
 end
 
 module X = Main (Clock)
