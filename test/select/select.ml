@@ -20,7 +20,7 @@ let () =
             match system with
             | "linux" -> `Linux
             | "windows" | "mingw64" -> `Windows
-            | "macosx" -> `Macosx
+            | "macosx" -> `Linux
             | v -> invalid_arg "Invalid argument of system option: %s" v
           in
           (system, output)
@@ -42,7 +42,6 @@ let () =
         ( load_file "clock_windows.ml"
         , load_file "clock_windows_stubs.c"
         , sexp_windows )
-    | `Macosx -> assert false
   in
   Printf.fprintf oc_ml "%s%!" ml ;
   Printf.fprintf oc_c "%s%!" c ;
