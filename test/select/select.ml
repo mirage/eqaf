@@ -11,6 +11,8 @@ let sexp_linux = "(-lrt)"
 
 let sexp_windows = "()"
 
+let sexp_mach = "()"
+
 let () =
   let system, output =
     try
@@ -19,8 +21,8 @@ let () =
           let system =
             match system with
             | "linux" -> `Linux
-            | "windows" | "mingw64" -> `Windows
-            | "macosx" -> `Linux
+            | "windows" | "mingw64" | "cygwin" -> `Windows
+            | "macosx" -> `MacOSX
             | v -> invalid_arg "Invalid argument of system option: %s" v
           in
           (system, output)
@@ -42,6 +44,8 @@ let () =
         ( load_file "clock_windows.ml"
         , load_file "clock_windows_stubs.c"
         , sexp_windows )
+    | `MacOSX ->
+        (load_file "clock_mach.ml", load_file "clock_mach_stubs.c", sexp_mach)
   in
   Printf.fprintf oc_ml "%s%!" ml ;
   Printf.fprintf oc_c "%s%!" c ;
