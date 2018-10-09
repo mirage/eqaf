@@ -8,17 +8,13 @@ type kind =
   | `Process_cpu_time
   | `Thread_cpu_time ]
 
-external clock_windows_get_time : unit -> int64 = "clock_windows_get_time"
-
-external clock_windows_init : unit -> unit = "clock_windows_init"
-
-let () = clock_windows_init ()
+external clock_mach_get_time : unit -> int64 = "clock_mach_get_time"
 
 let get = function
   | `Realtime | `Realtime_coarse | `Monotonic_coarse | `Monotonic_raw
    |`Boot_time | `Process_cpu_time | `Thread_cpu_time ->
-      Fmt.invalid_arg "clock not available on Windows"
-  | `Monotonic -> clock_windows_get_time ()
+      Fmt.invalid_arg "clock not available on Mach"
+  | `Monotonic -> clock_mach_get_time ()
 
 let kind_to_string = function
   | `Realtime -> "realtime"
@@ -51,7 +47,7 @@ let string_to_kind = function
   | "boot-time" -> `Boot_time
   | "process-cpu-time" -> `Process_cpu_time
   | "thread-cpu-time" -> `Thread_cpu_time
-  | x -> Fmt.invalid_arg "Clock_windows.string_to_kind: %s" x
+  | x -> Fmt.invalid_arg "Clock_mach.string_to_kind: %s" x
 
 let int_to_kind = function
   | 0 -> `Realtime
@@ -62,7 +58,7 @@ let int_to_kind = function
   | 5 -> `Boot_time
   | 6 -> `Process_cpu_time
   | 7 -> `Thread_cpu_time
-  | x -> Fmt.invalid_arg "Clock_windows.int_to_kind: %d" x
+  | x -> Fmt.invalid_arg "Clock_mach.int_to_kind: %d" x
 
 let max = 8
 
