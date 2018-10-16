@@ -12,6 +12,8 @@
 CAMLprim value
 clock_mach_get_time(value unit)
 {
+  CAMLparam0();
+
 #ifdef __MACH__
   static mach_timebase_info_data_t s;
   uint64_t now;
