@@ -133,15 +133,69 @@ let compare_spss () =
     Fmt.epr "B²> %s.\n%!" err1 ;
     Error ()
 
+(* XXX(dinosaure): this program try to compute diff between 2 coefficient
+   regressions:
+
+   - 1: time needed to compute equal function on 2 same values ([_eq])
+   - 2: time needed to compute equal function on 2 different values ([_neq])
+
+   We have 2 ways to compute it. The first is to compute a regression equation
+   which includes group 1 and group 2. A initial regression equation can be done
+   to know how long [equal] lasts:
+
+   regression
+     /dep time // m.(1)
+     /method = enter run // m.(0)
+
+   The first way to compare group 1 ([_eq]) and group 2 ([_neq]): we need to
+   insert a dummy variable [kind] where it is equal to [0.0] when it's owned by
+   the group 1 and [1.1] is owned by the group 2 (see [cons_*] function).
+   Finally, we had a new variable which is the product between [kind] ([m.(0)])
+   and [run] ([m.(1)]).
+
+   Finally, we can start to compute a regression equation where [time] will be
+   the responder and [kind], [run] and [kind * run] will be predictors:
+
+   regression
+     /dep time // m.(2)
+     /method = enter kind run (kind * run) // m.(0) m.(1) m.(3)
+
+   Time of [equal] will be available on [estimates.(1)] and diff will be
+   available on [estimates.(2)]. [compare_spss] checks r² ([>= 0.95]) and
+   main program checks if the diff is between [-30.0] and [30.0].
+
+   The second way to compare group 1 and group 2: it consists to compute basic
+   regression equation to know how long [equal] lasts. Then, we will compute [Z]
+   which is equal to:
+
+        B¹-B²
+   ---------------
+   sqrt(r¹² + r²²)
+
+   Where B¹ and B² are regression coefficients for [_eq] and [_neq] and r¹ and r²
+   are standard error of B¹ and B². Then, main program, as the first way, checks
+   if [Z] is between [-30.0] and [30.0].
+
+   NOTE about virtualization:
+
+   Virtual context (VirtualBox, VMWare, Xen or qemu) can delayed CPU instructions
+   and tricks on the time spended to execute them. By this fact, time counter lies
+   about time needed to compute [equal] function. So, in a virtual context we can
+   have some noises when we record measures (in [Benchmark]). *)
+
 let () =
   match compare_spss () with
   | Error () -> exit exit_failure
   | Ok (eqaf, stdlib) ->
     if eqaf >= -30. && eqaf <= 30.
     then Fmt.pr "B¹ = %f, B² = %f.\n%!" eqaf stdlib
-    else match compare_ccea () with
-      | Error () -> exit exit_failure
-      | Ok (eqaf, stdlib) ->
-        if eqaf >= -30. && eqaf <= 30.
-        then Fmt.pr "Z¹ = %f, Z² = %f.\n%!" eqaf stdlib
-        else ( Fmt.pr "Z¹ = %f, Z² = %f.\n%!" eqaf stdlib ; exit exit_failure )
+    else
+      ( Fmt.pr "Fail with B¹ = %f, B² = %f.\n%!" eqaf stdlib ;
+        Fmt.pr "> Start to compute Z.\n%!" ;
+
+        match compare_ccea () with
+        | Error () -> exit exit_failure
+        | Ok (eqaf, stdlib) ->
+          if eqaf >= -30. && eqaf <= 30.
+          then Fmt.pr "Z¹ = %f, Z² = %f.\n%!" eqaf stdlib
+          else ( Fmt.pr "Z¹ = %f, Z² = %f.\n%!" eqaf stdlib ; exit exit_failure ) )
