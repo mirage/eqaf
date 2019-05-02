@@ -13,15 +13,4 @@
  (name clock)
  (modules clock)
  (c_names clock_stubs)
- (libraries fmt)
  (c_flags (:include clock.sexp)))
-
-(executable
- (name test)
- (modules test)
- (libraries eqaf fmt clock))
-
-(alias
- (name runtest)
- (deps (:test test.exe))
- (action (run %{test})))

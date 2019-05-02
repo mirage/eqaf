@@ -1,14 +1,16 @@
 language: c
 install:
-  - wget https://raw.githubusercontent.com/ocaml/ocaml-travisci-skeleton/master/.travis-opam.sh
-  - wget https://raw.githubusercontent.com/dinosaure/ocaml-travisci-skeleton/master/.travis-docgen.sh
-script: travis_wait 30 bash -ex .travis-opam.sh
-sudo: true
+  - wget https://raw.githubusercontent.com/ocaml/ocaml-ci-scripts/master/.travis-docker.sh
+script: bash -ex .travis-docker.sh
+services:
+  - docker
 env:
+  global:
+    - PINS="eqaf:."
+    - DISTRO="debian-stable"
   matrix:
-  - PACKAGE="eqaf" OCAML_VERSION=4.04 TESTS=true
-  - PACKAGE="eqaf" OCAML_VERSION=4.05 TESTS=true
-  - PACKAGE="eqaf" OCAML_VERSION=4.05 TESTS=false EXTRA_DEPS="mirage-xen"
-  - PACKAGE="eqaf" OCAML_VERSION=4.06 TESTS=true
-  - PACKAGE="eqaf" OCAML_VERSION=4.07 TESTS=true
-  - PACKAGE="eqaf" OCAML_VERSION=4.07 TESTS=false EXTRA_DEPS="mirage-solo5"
+    - PACKAGE="eqaf" OCAML_VERSION=4.03.0 TESTS=true
+    - PACKAGE="eqaf" OCAML_VERSION=4.04.2 TESTS=true
+    - PACKAGE="eqaf" OCAML_VERSION=4.05.0 TESTS=true
+    - PACKAGE="eqaf" OCAML_VERSION=4.06.0 TESTS=true
+    - PACKAGE="eqaf" OCAML_VERSION=4.07.0 TESTS=true

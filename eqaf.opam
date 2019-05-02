@@ -2,10 +2,10 @@ opam-version: "2.0"
 name:         "eqaf"
 maintainer:   [ "Romain Calascibetta <romain.calascibetta@gmail.com>" ]
 authors:      [ "Romain Calascibetta <romain.calascibetta@gmail.com>" ]
-homepage:     "https://github.com/dinosaure/eqaf"
-bug-reports:  "https://github.com/dinosaure/eqaf/issues"
-dev-repo:     "git+https://github.com/dinosaure/eqaf.git"
-doc:          "https://dinosaure.github.io/eqaf/"
+homepage:     "https://github.com/mirage/eqaf"
+bug-reports:  "https://github.com/mirage/eqaf/issues"
+dev-repo:     "git+https://github.com/mirage/eqaf.git"
+doc:          "https://mirage.github.io/eqaf/"
 license:      "MIT"
 synopsis:     "Constant-time equal function on string"
 description: """
@@ -13,7 +13,7 @@ This package provides an equal function on string in constant-time to avoid timi
 """
 
 build: [
-  [ "dune" "subst" ]
+  [ "dune" "subst" ] {pinned}
   [ "dune" "build" "-p" name "-j" jobs ]
   [ "dune" "runtest" "-p" name "-j" jobs ] {with-test}
 ]
@@ -21,6 +21,4 @@ build: [
 depends: [
   "ocaml"          {>= "4.03.0"}
   "dune"           {build}
-  "fmt"            {with-test}
-  "base-bytes"     {with-test}
 ]
