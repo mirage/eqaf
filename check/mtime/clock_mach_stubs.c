@@ -20,6 +20,8 @@ clock_mach_init(value unit)
     caml_raise_sys_error (caml_copy_string("clock_mach_init: mach_timebase_info () failed"));
   if (s.denom == 0)
     caml_raise_sys_error (caml_copy_string("clock_mach_init: mach_timebase_info_data.denom is 0"));
+
+  return Val_unit;
 }
 
 CAMLprim value
