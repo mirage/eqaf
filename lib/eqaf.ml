@@ -20,3 +20,33 @@ let equal a b =
   done ;
 
   String.length a = String.length b && !res0 = 0l && !res1 = 0
+
+let compare_be a b =
+  let res = ref 0 in
+
+  if String.length a <> String.length b
+  then invalid_arg "lengths mismatch" ;
+
+  for i = String.length a - 1 downto 0 do
+    let x_a = int a i in
+    let x_b = int b i in
+
+    match (compare : int -> int -> int) x_a x_b with
+    | 0 -> ()
+    | x -> if !res = 0 then res := x
+  done ; !res
+
+let compare_le a b =
+  let res = ref 0 in
+
+  if String.length a <> String.length b
+  then invalid_arg "length mismatch" ;
+
+  for i = 0 to String.length a - 1 do
+    let x_a = int a i in
+    let x_b = int b i in
+
+    match (compare : int -> int -> int) x_a x_b with
+    | 0 -> ()
+    | x -> if !res = 0 then res := x
+  done ; !res
