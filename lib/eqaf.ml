@@ -11,7 +11,7 @@ let equal a b =
 
   for i = 0 to pred len1 do
     let i = i * 4 in
-    res0 := Int32.logor !res0 (Int32.logxor (int32 a i) (int32 a i))
+    res0 := Int32.logor !res0 (Int32.logxor (int32 a i) (int32 b i))
   done ;
 
   for i = 0 to pred len0 do
