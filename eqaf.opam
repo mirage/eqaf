@@ -21,4 +21,5 @@ build: [
 depends: [
   "ocaml"          {>= "4.03.0"}
   "dune"           {build}
+  "alcotest"       {with-test}
 ]
