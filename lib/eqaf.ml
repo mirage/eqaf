@@ -91,7 +91,7 @@ let equal a b =
      incq   %rbx
      orq    %rdx, %rbx
   *)
-  let r = (String.length a - String.length b) lor !r in
+  let r = ((String.length a lxor ln) lor (String.length b lxor ln)) lor !r in
   (* cmpq   $1, %rbx
      sete   %al
      movzbq %al, %rax
