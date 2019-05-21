@@ -1,101 +1,110 @@
 let[@inline] get x i = String.unsafe_get x i |> Char.code
 
-(* get:
-     sarq $1, %rbx
-     movzbq (%rax, %rbx), %rax
-     leaq 1(%rax,%rax), %rax
-     ret
+(* XXX(dinosaure): we use [unsafe_get] to avoid jump to exception:
 
-   XXX(dinosaure): we use [unsafe_get] to avoid jump to exception.
+        sarq    $1, %rbx
+        movzbq  (%rax,%rbx), %rax
+        leaq    1(%rax,%rax), %rax
+        ret
 *)
 
-let[@inline] min (a:int) b = if a < b then a else b
+external unsafe_get_int16 : string -> int -> int = "%caml_string_get16u"
+let[@inline] get16 x i = unsafe_get_int16 x i
 
-(* min:
-     cmpq  %rbx, %rax
-     jge   .L101
-     ret
-   .L101
-     movq  %rbx, %rax
-     ret
+(* XXX(dinosaure): same as [unsafe_get] but for [int16]:
 
-   XXX(dinosaure): we rewrite [min] to avoid a call to [camlStdlib__min].
-   flambda can inline it by:
+        sarq    $1, %rbx
+        movzwq  (%rax,%rbx), %rax
+        leaq    1(%rax,%rax), %rax
+        ret
+*)
 
-     ((min[@inlined]) : int -> int -> int)
+let equal ~ln a b =
+  let l1 = ln asr 1 in
 
-     // [String.length a] on %rsi
-     movq   %rsi, 16(%rsp)
-     // [String.length b] on %rdi
-     movq   %rdi, 24(%rsp)
-     movq   caml_lessequal@GOTPCREL(%rip), %rax
-     call   caml_c_call@PLT
+  (*
+        sarq    $1, %rcx
+        orq     $1, %rcx
+  *)
+
+  let r = ref 0 in
+
+  (*
+        movq    $1, %rdx
+  *)
+
+  for i = 0 to pred l1 do r := !r lor (get16 a (i * 2) lxor get16 b (i * 2)) done ;
+
+  (*
+        movq    $1, %rsi
+        addq    $-2, %rcx
+        cmpq    %rcx, %rsi
+        jg      .L104
+.L105:
+        leaq    -1(%rsi,%rsi), %r8
+
+        sarq    $1, %r8
+        movzwq  (%rdi,%r8), %r9
+        leaq    1(%r9,%r9), %r9
+        movzwq  (%rbx,%r8), %r8
+        leaq    1(%r8,%r8), %r8
+
+     // [unsafe_get_int16 a i] and [unsafe_get_int6 b i]
+
+        xorq    %r9, %r8
+        orq     $1, %r8
+        orq     %r8, %rdx
+        movq    %rsi, %r8
+        addq    $2, %rsi
+        cmpq    %rcx, %r8
+        jne     .L105
+.L104:
+  *)
+
+  for _ = 1 to ln land 1 do r := !r lor (get a (ln - 1) lxor get b (ln - 1)) done ;
+
+  (*
+        movq    $3, %rsi
+        movq    %rax, %rcx
+        andq    $3, %rcx
+        cmpq    %rcx, %rsi
+        jg      .L102
+.L103:
+        movq    %rax, %r8
+        addq    $-2, %r8
+
+        sarq    $1, %r8
+        movzbq  (%rdi,%r8), %r9
+        leaq    1(%r9,%r9), %r9
+        movzbq  (%rbx,%r8), %r8
+        leaq    1(%r8,%r8), %r8
+
+     // [unsafe_get a i] and [unsafe_get b i]
+
+        xorq    %r9, %r8
+        orq     $1, %r8
+        orq     %r8, %rdx
+        movq    %rsi, %r8
+        addq    $2, %rsi
+        cmpq    %rcx, %r8
+        jne     .L103
+.L102:
+  *)
+
+  !r = 0
+
+(*
+        cmpq    $1, %rdx
+        sete    %al
+        movzbq  %al, %rax
+        leaq    1(%rax,%rax), %rax
+        ret
 *)
 
 let equal a b =
-  let ln = min (String.length a) (String.length b) in
-  (* movq   -8(%rbx), %rdi
-     shrq   $10, %rdi
-     leaq   -1(,%rdi,8), %rdi
-     movzbq (%rbx,%rdi), %rsi
-     subq   %rsi, %rdi
-     leaq   1(%rdi,%rdi),%rsi
-
-     // [String.length a]
-
-     movq   -8(%rax), %rdi
-     shrq   $10,%rdi
-     leaq   -1(,%rdi,8), %rdi
-     movzbq (%rax,%rdi), %rdx
-     subq   %rdx,%rdi
-     leaq   1(%rdi,%rdi), %rdi
-
-     // [String.length b]
-
-     cmpq   %rsi, %rdi
-     jge    .L105
-     movq   %rdi, %rsi
-     .L105:
-     movq   $1, %rdx
-     movq   $1, %rdi
-
-     // [min] inlined (without flambda)
-  *)
-  let r = ref 0 in
-  let i = ref 0 in
-  (* .L104
-     cmpq   %rsi,%rdi
-     jge    .L103     // end of loop
-     movq   %rdi, %rcx
-
-     sarq   $1,%rcx
-     movzbq (%rbx,%rcx), %r8
-     leaq   1(%r8,%r8), %r8
-     movzbq (%rax,%rcx), %rcx
-     leaq   1(%rcx,%rcx), %rcx
-
-     // [get a !i] & [get b !i]
-
-     xorq   %r8, %rcx
-     orq    $1,%rcx
-     orq    %rcx, %rdx
-     addq   $2, %rdi
-     jmp   .L104
-  *)
-  while !i < ln do r := !r lor (get a !i lxor get b !i) ; incr i done ;
-  (* // [String.length a] in %rdi
-     // [String.lenght b] in %rbx
-     // [r] in %rdx
-
-     subq   %rdi, %rbx
-     incq   %rbx
-     orq    %rdx, %rbx
-  *)
-  let r = (String.length a - String.length b) lor !r in
-  (* cmpq   $1, %rbx
-     sete   %al
-     movzbq %al, %rax
-     leaq   1(%rax,%rax), %rax
-     ret
-  *)
-  r = 0
+  let al = String.length a in
+  let bl = String.length b in
+  let ln = min al bl in
+  if ln = 0 || (al lxor ln) lor (bl lxor ln) <> 0
+  then false
+  else equal ~ln a b
