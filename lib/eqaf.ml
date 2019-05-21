@@ -9,6 +9,9 @@ let[@inline] get x i = String.unsafe_get x i |> Char.code
    XXX(dinosaure): we use [unsafe_get] to avoid jump to exception.
 *)
 
+external unsafe_get_int16 : string -> int -> int = "%caml_string_get16u"
+let[@inline] get16 x i = unsafe_get_int16 x i
+
 let[@inline] min (a:int) b = if a < b then a else b
 
 (* min:
@@ -34,6 +37,8 @@ let[@inline] min (a:int) b = if a < b then a else b
 
 let equal a b =
   let ln = min (String.length a) (String.length b) in
+  let l0 = ln land 1 in
+  let l1 = ln asr 1 in
   (* movq   -8(%rbx), %rdi
      shrq   $10, %rdi
      leaq   -1(,%rdi,8), %rdi
@@ -61,7 +66,8 @@ let equal a b =
 
      // [min] inlined (without flambda)
   *)
-  let r = ref 0 in
+  let r1 = ref 0 in
+  let r0 = ref 0 in
   let i = ref 0 in
   (* .L104
      cmpq   %rsi,%rdi
@@ -82,7 +88,9 @@ let equal a b =
      addq   $2, %rdi
      jmp   .L104
   *)
-  while !i < ln do r := !r lor (get a !i lxor get b !i) ; incr i done ;
+  while !i < l1 do let off = !i * 2 in r0 := !r0 lor (get16 a off lxor get16 b off) ; incr i done ;
+  i := 0 ;
+  while !i < l0 do let off = l1 * 2 + !i in r1 := !r1 lor (get a off lxor get b off) ; incr i done ;
   (* // [String.length a] in %rdi
      // [String.lenght b] in %rbx
      // [r] in %rdx
@@ -91,7 +99,7 @@ let equal a b =
      incq   %rbx
      orq    %rdx, %rbx
   *)
-  let r = ((String.length a lxor ln) lor (String.length b lxor ln)) lor !r in
+  let r = ((String.length a lxor ln) lor (String.length b lxor ln)) lor !r1 lor !r0 in
   (* cmpq   $1, %rbx
      sete   %al
      movzbq %al, %rax
