@@ -101,10 +101,13 @@ let equal ~ln a b =
         ret
 *)
 
+let[@inline] min (a:int) b = if a < b then a else b
+(* XXX(dinosaure): we should delete the branch, TODO! *)
+
 let equal a b =
   let al = String.length a in
   let bl = String.length b in
   let ln = min al bl in
-  if ln = 0 || (al lxor ln) lor (bl lxor ln) <> 0
+  if (al lxor ln) lor (bl lxor ln) <> 0
   then false
   else equal ~ln a b
