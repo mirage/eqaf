@@ -1,8 +1,19 @@
+### v0.4 2019-05-24 Paris (France)
+
+- Distribution integrate an attack example
+- Fuzzer to test `equal` function
+- Unroll internal loop over 16 bits integers instead 32 bits
+- Put x86 ASM output in implementation (and audit)
+- Do second check even if first on fails (bad r²)
+- Avoid indirection to `Pervasives` functions
+
 ### v0.3 2019-05-02 Paris (France)
 
 - Provide `Eqaf_bigstring`
 - Provide `Eqaf_cstruct`
 - New check tool and delete any dependencies on `eqaf` package (@dinosaure, @hannesm, @cfcs)
+
+NOTE: This version is buggy, you MUST use v0.2 or v0.4
 
 ### v0.2 2018-10-15 Paris (France)
 
