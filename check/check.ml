@@ -183,19 +183,23 @@ let compare_spss () =
    about time needed to compute [equal] function. So, in a virtual context we can
    have some noises when we record measures (in [Benchmark]). *)
 
+let last_chance () =
+  match compare_ccea () with
+  | Error () -> exit exit_failure
+  | Ok (eqaf, stdlib) ->
+    if eqaf >= -30. && eqaf <= 30.
+    then Fmt.pr "Z¹ = %f, Z² = %f.\n%!" eqaf stdlib
+    else ( Fmt.pr "Z¹ = %f, Z² = %f.\n%!" eqaf stdlib ; exit exit_failure )
+
 let () =
   match compare_spss () with
-  | Error () -> exit exit_failure
+  | Error () -> last_chance ()
   | Ok (eqaf, stdlib) ->
     if eqaf >= -30. && eqaf <= 30.
     then Fmt.pr "B¹ = %f, B² = %f.\n%!" eqaf stdlib
     else
       ( Fmt.pr "Fail with B¹ = %f, B² = %f.\n%!" eqaf stdlib ;
         Fmt.pr "> Start to compute Z.\n%!" ;
+        last_chance () )
 
-        match compare_ccea () with
-        | Error () -> exit exit_failure
-        | Ok (eqaf, stdlib) ->
-          if eqaf >= -30. && eqaf <= 30.
-          then Fmt.pr "Z¹ = %f, Z² = %f.\n%!" eqaf stdlib
-          else ( Fmt.pr "Z¹ = %f, Z² = %f.\n%!" eqaf stdlib ; exit exit_failure ) )
+
