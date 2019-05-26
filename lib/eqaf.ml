@@ -136,7 +136,7 @@ let compare_be a b =
   let bl = String.length b in
   let ln = min al bl in
   if (al lxor ln) lor (bl lxor ln) <> 0
-  then invalid_arg "compare_be: lengths mistmatch"
+  then invalid_arg "compare_be: length mismatch"
   else compare_be ~ln a b
 
 let compare_le ~ln a b =
