@@ -112,33 +112,52 @@ let equal a b =
   then false
   else equal ~ln a b
 
+let[@inline] compare (a:int) b = a - b
+let[@inline] minus_one_or_less n = ((n land min_int) asr 63) land 1
+let[@inline] one_if_not_zero n = (minus_one_or_less n) lor (minus_one_or_less (-n))
+
+let compare_be ~ln a b =
+  let r = ref 0 in
+  let i = ref (pred ln) in
+
+  while !i >= 0 do
+    let xa = get a !i and xb = get b !i in
+    let c = compare xa xb in
+    let n = (minus_one_or_less[@inlined]) c + (one_if_not_zero[@inlined]) c in
+    let n = n lsr (((one_if_not_zero[@inlined]) !r) lsl 1) in
+    r := n + !r ;
+    decr i ;
+  done ;
+
+  (!r land 1) - (!r lsr 1)
+
 let compare_be a b =
-  let res = ref 0 in
+  let al = String.length a in
+  let bl = String.length b in
+  let ln = min al bl in
+  if (al lxor ln) lor (bl lxor ln) <> 0
+  then invalid_arg "compare_be: lengths mistmatch"
+  else compare_be ~ln a b
 
-  if String.length a <> String.length b
-  then invalid_arg "lengths mismatch" ;
+let compare_le ~ln a b =
+  let r = ref 0 in
+  let i = ref 0 in
 
-  for i = String.length a - 1 downto 0 do
-    let x_a = int a i in
-    let x_b = int b i in
+  while !i < ln do
+    let xa = get a !i and xb = get b !i in
+    let c = compare xa xb in
+    let n = (minus_one_or_less[@inlined]) c + (one_if_not_zero[@inlined]) c in
+    let n = n lsr (((one_if_not_zero[@inlined]) !r) lsl 1) in
+    r := n + !r ;
+    incr i ;
+  done ;
 
-    match (compare : int -> int -> int) x_a x_b with
-    | 0 -> ()
-    | x -> if !res = 0 then res := x
-  done ; !res
+  (!r land 1) - (!r lsr 1)
 
 let compare_le a b =
-  let res = ref 0 in
-
-  if String.length a <> String.length b
-  then invalid_arg "length mismatch" ;
-
-  for i = 0 to String.length a - 1 do
-    let x_a = int a i in
-    let x_b = int b i in
-
-    match (compare : int -> int -> int) x_a x_b with
-    | 0 -> ()
-    | x -> if !res = 0 then res := x
-  done ; !res
-
+  let al = String.length a in
+  let bl = String.length b in
+  let ln = min al bl in
+  if (al lxor ln) lor (bl lxor ln) <> 0
+  then invalid_arg "compare_le: lengths mistmatch"
+  else compare_le ~ln a b
