@@ -112,9 +112,9 @@ let equal a b =
   then false
   else equal ~ln a b
 
-let[@inline] compare (a:int) b = a - b
-let[@inline] minus_one_or_less n = ((n land min_int) asr Sys.int_size) land 1
-let[@inline] one_if_not_zero n = (minus_one_or_less n) lor (minus_one_or_less (-n))
+let[@inline always] compare (a:int) b = a - b
+let[@inline always] minus_one_or_less n = ((n land min_int) asr Sys.int_size) land 1
+let[@inline always] one_if_not_zero n = (minus_one_or_less n) lor (minus_one_or_less (-n))
 
 let compare_le ~ln a b =
   let r = ref 0 in
@@ -123,8 +123,8 @@ let compare_le ~ln a b =
   while !i >= 0 do
     let xa = get a !i and xb = get b !i in
     let c = compare xa xb in
-    let n = (minus_one_or_less[@inlined]) c + (one_if_not_zero[@inlined]) c in
-    let n = n lsr (((one_if_not_zero[@inlined]) !r) lsl 1) in
+    let n = minus_one_or_less c + one_if_not_zero c in
+    let n = n lsr ((one_if_not_zero !r) lsl 1) in
     r := n + !r ;
     decr i ;
   done ;
@@ -147,8 +147,8 @@ let compare_be ~ln a b =
   while !i < ln do
     let xa = get a !i and xb = get b !i in
     let c = compare xa xb in
-    let n = (minus_one_or_less[@inlined]) c + (one_if_not_zero[@inlined]) c in
-    let n = n lsr (((one_if_not_zero[@inlined]) !r) lsl 1) in
+    let n = minus_one_or_less c + one_if_not_zero c in
+    let n = n lsr ((one_if_not_zero !r) lsl 1) in
     r := n + !r ;
     incr i ;
   done ;
