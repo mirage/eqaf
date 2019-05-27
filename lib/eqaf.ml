@@ -113,7 +113,7 @@ let equal a b =
   else equal ~ln a b
 
 let[@inline] compare (a:int) b = a - b
-let[@inline] minus_one_or_less n = ((n land min_int) asr 63) land 1
+let[@inline] minus_one_or_less n = ((n land min_int) asr Sys.int_size) land 1
 let[@inline] one_if_not_zero n = (minus_one_or_less n) lor (minus_one_or_less (-n))
 
 let compare_le ~ln a b =
