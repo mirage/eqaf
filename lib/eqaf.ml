@@ -116,7 +116,7 @@ let[@inline] compare (a:int) b = a - b
 let[@inline] minus_one_or_less n = ((n land min_int) asr 63) land 1
 let[@inline] one_if_not_zero n = (minus_one_or_less n) lor (minus_one_or_less (-n))
 
-let compare_be ~ln a b =
+let compare_le ~ln a b =
   let r = ref 0 in
   let i = ref (pred ln) in
 
@@ -131,15 +131,16 @@ let compare_be ~ln a b =
 
   (!r land 1) - (!r lsr 1)
 
-let compare_be a b =
+let compare_le a b =
   let al = String.length a in
   let bl = String.length b in
-  let ln = min al bl in
-  if (al lxor ln) lor (bl lxor ln) <> 0
-  then invalid_arg "compare_be: lengths mistmatch"
-  else compare_be ~ln a b
+  if al < bl
+  then 1 
+  else if al > bl
+  then (-1)
+  else compare_le ~ln:al (* = bl *) a b
 
-let compare_le ~ln a b =
+let compare_be ~ln a b =
   let r = ref 0 in
   let i = ref 0 in
 
@@ -154,10 +155,11 @@ let compare_le ~ln a b =
 
   (!r land 1) - (!r lsr 1)
 
-let compare_le a b =
+let compare_be a b =
   let al = String.length a in
   let bl = String.length b in
-  let ln = min al bl in
-  if (al lxor ln) lor (bl lxor ln) <> 0
-  then invalid_arg "compare_le: lengths mistmatch"
-  else compare_le ~ln a b
+  if al < bl
+  then 1 
+  else if al > bl
+  then (-1)
+  else compare_be ~ln:al (* = bl *) a b

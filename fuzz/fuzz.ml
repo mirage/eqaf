@@ -16,12 +16,12 @@ let () =
   add_test ~name:"compare_le" [ bytes; bytes ] @@ fun a b ->
   if String.length a <> String.length b then bad_test () ;
   let expect = String.compare a b in
-  let result = Eqaf.compare_le a b in
+  let result = Eqaf.compare_be a b in
   check_eq ~pp:Format.pp_print_int ~eq:(=) expect result
 
 let () =
   add_test ~name:"compare_be" [ bytes; bytes ] @@ fun a b ->
   if String.length a <> String.length b then bad_test () ;
   let expect = String.compare (rev a) (rev b) in
-  let result = Eqaf.compare_be a b in
+  let result = Eqaf.compare_le a b in
   check_eq ~pp:Format.pp_print_int ~eq:(=) expect result
