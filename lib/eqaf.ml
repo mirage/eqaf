@@ -131,6 +131,13 @@ let compare_le ~ln a b =
 
   (!r land 1) - (!r lsr 1)
 
+let compare_le_with_len ~len:ln a b =
+  let al = String.length a in
+  let bl = String.length b in
+  if ln <= al && ln <= bl
+  then compare_le ~ln a b
+  else invalid_arg "compare_le_with_len"
+
 let compare_le a b =
   let al = String.length a in
   let bl = String.length b in
@@ -155,11 +162,16 @@ let compare_be ~ln a b =
 
   (!r land 1) - (!r lsr 1)
 
+let compare_be_with_len ~len:ln a b =
+  let al = String.length a in
+  let bl = String.length b in
+  if ln <= al && ln <= bl
+  then compare_be ~ln a b
+  else invalid_arg "compare_be_with_len"
+
 let compare_be a b =
   let al = String.length a in
   let bl = String.length b in
-  if al < bl
-  then 1 
-  else if al > bl
-  then (-1)
+  if al < bl then 1
+  else if al > bl then (-1)
   else compare_be ~ln:al (* = bl *) a b
