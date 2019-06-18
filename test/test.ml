@@ -1,14 +1,26 @@
+type r = Neg | Pos | Zero
+
+let equal w a b = match w with
+  | Zero -> a = 0 && b = 0
+  | Neg -> a < 0 && b < 0
+  | Pos -> a > 0 && b > 0
+
+let of_expected = function
+  | 0 -> Zero | n -> if n < 0 then Neg else Pos
+
+let value w = Alcotest.testable Fmt.int (equal w)
+
 let be a b expected =
   let title = Fmt.strf "be %S %S = %d" a b expected in
   Alcotest.test_case title `Quick @@ fun () ->
   let expected' = String.compare a b in
-  Alcotest.(check int) "result" (Eqaf.compare_be a b) expected ;
-  Alcotest.(check int) "string.compare" (Eqaf.compare_be a b) expected'
+  Alcotest.(check (value (of_expected expected))) "result" (Eqaf.compare_be a b) expected ;
+  Alcotest.(check (value (of_expected expected'))) "string.compare" (Eqaf.compare_be a b) expected'
 
 let le a b expected =
   let title = Fmt.strf "le %S %S = %d" a b expected in
   Alcotest.test_case title `Quick @@ fun () ->
-  Alcotest.(check int) "result" (Eqaf.compare_le a b) expected
+  Alcotest.(check (value (of_expected expected))) "result" (Eqaf.compare_le a b) expected
 
 let () =
   Alcotest.run "eqaf"

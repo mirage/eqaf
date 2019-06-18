@@ -113,8 +113,8 @@ let equal a b =
   else equal ~ln a b
 
 let[@inline always] compare (a:int) b = a - b
-let[@inline always] minus_one_or_less n = ((n land min_int) asr Sys.int_size) land 1
-let[@inline always] one_if_not_zero n = (minus_one_or_less n) lor (minus_one_or_less (-n))
+let[@inline always] sixteen_if_minus_one_or_less n = (n asr Sys.int_size) land 16
+let[@inline always] eight_if_one_or_more n = ((-n) asr Sys.int_size) land 8
 
 let compare_le ~ln a b =
   let r = ref 0 in
@@ -123,13 +123,11 @@ let compare_le ~ln a b =
   while !i >= 0 do
     let xa = get a !i and xb = get b !i in
     let c = compare xa xb in
-    let n = minus_one_or_less c + one_if_not_zero c in
-    let n = n lsr ((one_if_not_zero !r) lsl 1) in
-    r := n + !r ;
+    r := !r lor ((sixteen_if_minus_one_or_less c + eight_if_one_or_more c) lsr !r) ;
     decr i ;
   done ;
 
-  (!r land 1) - (!r lsr 1)
+  (!r land 8) - (!r land 16)
 
 let compare_le_with_len ~len:ln a b =
   let al = String.length a in
@@ -155,13 +153,11 @@ let compare_be ~ln a b =
   while !i < ln do
     let xa = get a !i and xb = get b !i in
     let c = compare xa xb in
-    let n = minus_one_or_less c + one_if_not_zero c in
-    let n = n lsr ((one_if_not_zero !r) lsl 1) in
-    r := n + !r ;
+    r := !r lor ((sixteen_if_minus_one_or_less c + eight_if_one_or_more c) lsr !r) ;
     incr i ;
   done ;
 
-  (!r land 1) - (!r lsr 1)
+  (!r land 8) - (!r land 16)
 
 let compare_be_with_len ~len:ln a b =
   let al = String.length a in
