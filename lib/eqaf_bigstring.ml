@@ -12,15 +12,12 @@ let equal ~ln a b =
   for _ = 1 to ln land 1 do r := !r lor (get a (ln - 1) lxor get b (ln - 1)) done ;
   !r = 0
 
-let[@inline] min (a:int) b = if a < b then a else b
-
 let equal a b =
   let al = length a in
   let bl = length b in
-  let ln = min al bl in
-  if (al lxor ln) lor (bl lxor ln) <> 0
+  if al <> bl
   then false
-  else equal ~ln a b
+  else equal ~ln:al a b
 
 let[@inline always] compare (a:int) b = a - b
 let[@inline always] sixteen_if_minus_one_or_less n = (n asr Sys.int_size) land 16
