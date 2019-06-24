@@ -35,8 +35,8 @@
 
 val equal : string -> string -> bool
 (** [equal a b] returns [true] if [a] and [b] are equals. [String.equal a b =
-   equal a b] for any [a] and [b]. [equal] function avoid a {i timing-attack}
-   where it spends the same time even if [a] and [b] are differents.*)
+   equal a b] for any [a] and [b]. The execution time of [equal] depends solely
+   on the length of the strings, not the contents. *)
 
 val compare_be : string -> string -> int
 (** [compare_be a b] returns [0] if [a] is equal to [b], a negative integer if
