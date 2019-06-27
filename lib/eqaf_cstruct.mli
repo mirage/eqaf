@@ -1,2 +1,5 @@
 val equal : Cstruct.t -> Cstruct.t -> bool
-(** Constant time equal function on [Cstruct.t]. *)
+val compare_be : Cstruct.t -> Cstruct.t -> int
+val compare_be_with_len : len:int -> Cstruct.t -> Cstruct.t -> int
+val compare_le : Cstruct.t -> Cstruct.t -> int
+val compare_le_with_len : len:int -> Cstruct.t -> Cstruct.t -> int
