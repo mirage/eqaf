@@ -1,3 +1,12 @@
+### v0.5 2019-07-01 Paris (France)
+
+- Delete `min` and use `<>` operator to compare length on `equal` function
+- Implementation of `compare_{be,le}{,with_len}` function (@cfcs, @hannesm, @dinosaure)
+- Test on `compare` function (@dinosaure)
+- Unit test on `compare` (@dinosaure)
+- Fuzz test on `compare` (@dinosaure)
+- Documentation (@dinosaure, @cfcs)
+
 ### v0.4 2019-05-24 Paris (France)
 
 - Distribution integrate an attack example
