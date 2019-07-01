@@ -57,7 +57,7 @@ val compare_be : string -> string -> int
 val compare_be_with_len : len:int -> string -> string -> int
 (** [compare_be_with_len ~len a b] does {!compare_be a b} on [len] bytes.
 
-    @raise [Invalid_argument] if [len] is upper than [String.length a] or
+    @raise Invalid_argument if [len] is upper than [String.length a] or
    [String.length b]. *)
 
 val compare_le : string -> string -> int
@@ -68,5 +68,5 @@ val compare_le_with_len : len:int -> string -> string -> int
 (** [compare_le_with_len a b] is semantically [compare_be_with_len ~len (rev a)
    (rev b)]. With [rev] reverse a string ([a = rev (rev a)]).
 
-    @raise [Invalid_argument] if [len] is upper than [String.length a] or
+    @raise Invalid_argument if [len] is upper than [String.length a] or
    [String.length b]. *)
