@@ -8,7 +8,7 @@
  (optional)
  (public_name eqaf.bigstring)
  (modules eqaf_bigstring)
- (libraries bigarray))
+ (libraries bigarray-compat))
 
 (library
  (name eqaf_cstruct)
