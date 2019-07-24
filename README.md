@@ -34,14 +34,14 @@ self-contained.
 **A** `eqaf` is fragile where the most important assumption is times needed to
 compute `equal`. So `eqaf` provides the `check` tool but results from it can be
 disturb by side-channel (like hypervisor). In a bare-metal environment, `check`
-strictly works and should return
+strictly works and should return `0`.
 
 **Q** `eqaf` is slower than `String.compare`, it's possible to optimize it?
 
 **A** The final goal of `eqaf` is to provide a _safe_ equal function. Speed is
 clearly not what we want where we prefer to provide an implementation which does
 not leak informations like: where is the first byte which differs between `a`
-and `b**.
+and `b`.
 
 **Q** Which attack `eqaf` prevents?
 
@@ -51,7 +51,7 @@ differs. A possible attack is to see how long we need to compare two values,
 like an user input and a password.
 
 Logically, the longer this time is, the more user input is the password. So when
-we need to compare sensible values (like hashes), we should something like
+we need to compare sensible values (like hashes), we should use something like
 `eqaf`. The distribution provides an example of this attack:
 
 ```sh
