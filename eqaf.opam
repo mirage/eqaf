@@ -24,3 +24,8 @@ depends: [
   "alcotest"       {with-test}
   "crowbar"        {with-test}
 ]
+
+depopts: [
+  "cstruct" {>= "4.0.0"}
+  "bigarray-compat"
+]
