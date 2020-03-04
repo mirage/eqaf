@@ -169,3 +169,18 @@ let compare_be a b =
   if al < bl then 1
   else if al > bl then (-1)
   else compare_be ~ln:al (* = bl *) a b
+
+let[@inline always] minus_one_or_less n =
+  n lsr (Sys.int_size - 1)
+
+let[@inline always] one_if_not_zero n =
+  minus_one_or_less ((- n) lor n)
+
+let[@inline always] zero_if_not_zero n =
+  (one_if_not_zero n) - 1
+
+let[@inline always] select_int choose_b a b =
+  let mask = ((- choose_b) lor choose_b) asr Sys.int_size in
+  (a land (lnot mask)) lor (b land mask)
+
+
