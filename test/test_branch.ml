@@ -1,6 +1,15 @@
 let exit_success = 0
 let exit_failure = 1
 
+(* First computation wants to count operations needed by
+   - one_if_not_zero
+   - zero_if_not_zero
+   - select_int
+
+   For each /assembly instructions/, we update a counter. This way is not
+   totally true. Even if we check by hands that bitwise operations don't
+   emit branches, this is our only assumption! *)
+
 let operation = ref 0
 
 let logical_shift_right a b = incr operation ; a lsr b
@@ -39,6 +48,16 @@ let select_int_ops =
   Format.printf "[select_int]:                  %d operation(s).\n%!" !operation ;
   !operation
 
+(* To be able to over-evaluated time needed by our functions, we plug in front of
+   our bitwise operations a special sleep. See [asm_sleep.S], it's the most light
+   sleep instruction that what we can. Then, compilation of this file replace any
+   call of `eqaf_sleep` by:
+
+     callq xxxxxx <eqaf_sleep>
+
+   Which pushes amd pops on the stack pointer to the caller but it still outside
+   any branches. *)
+
 external eqaf_sleep : unit -> unit = "eqaf_sleep" [@@noalloc]
 
 let logical_shift_right a b = eqaf_sleep () ; a lsr b
@@ -58,7 +77,26 @@ let[@inline always] select_int choose_b a b =
   let mask = shift_right (logical_or (minus choose_b) choose_b) Sys.int_size in
   logical_or (logical_and a (logical_not mask)) (logical_and b mask)
 
-external time : unit -> (int64 [@unboxed]) = "caml_time_bytes" "caml_time" [@@noalloc]
+(* Finally, we count how many time we spend when we call our
+   functions. [eqaf_sleep] spends 1 second, so our bitwise operators
+   should spend 1 second + some nanosecond. At the end, execution of
+   them should be closely equal to our operation counter where:
+
+     1 operation ~= 1 second
+
+   To be able to count time, we use [caml_time] which is available only
+   on Linux and for a native compilation (see [@unboxed]). Because bitwise
+   operation spend at least 1 second, we finally [floor] our results to
+   delete noise.
+
+   NOTE: [check/check] does a linear regression to delete noise and really
+   get how long is our functions. We think that for our functions:
+   - zero_if_not_zero
+   - one_if_not_zero
+   - select_int
+   [check/check] is too huge. *)
+
+external time : unit -> (int64 [@unboxed]) = "unavailable" "caml_time" [@@noalloc]
 
 let fdiv a b = a /. b
 
