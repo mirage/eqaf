@@ -70,3 +70,18 @@ val compare_le_with_len : len:int -> string -> string -> int
 
     @raise Invalid_argument if [len] is upper than [String.length a] or
    [String.length b]. *)
+
+val one_if_not_zero : int -> int
+(** [one_if_not_zero n] is a constant-time version of
+    [if n <> 0 then 1 else 0]. This is functionally equivalent to [!!n] in the C
+    programming language. *)
+
+val zero_if_not_zero : int -> int
+(** [zero_if_not_zero n] is a constant-time of
+    [if n <> 0 then 0 else 1]. This is functionnaly equivalent to [!n] in the C
+    programming language. *)
+
+val select_int : int -> int -> int -> int
+(** [select_int choose_b a b] is [a] if [choose_b = 0] and [b] otherwise.
+    This comparison is constant-time and it should not be possible for a measuring
+    adversary to determine anything about the values of [choose_b], [a], or [b]. *)

@@ -208,16 +208,25 @@ let equal () =
         Fmt.pr "> Start to compute Z.\n%!" ;
         equal_last_chance () )
 
+let compare_last_chance () =
+  let open Benchmark in
+  match ccea (V eqaf_cmp, V eqaf_ncmp) (V stdlib_cmp, V stdlib_ncmp) with
+  | Error () -> exit_failure
+  | Ok (eqaf, stdlib) ->
+    if eqaf >= -30. && eqaf <= 30.
+    then ( Fmt.pr "Z¹ = %f, Z² = %f.\n%!" eqaf stdlib ; exit_success )
+    else ( Fmt.pr "Z¹ = %f, Z² = %f.\n%!" eqaf stdlib ; exit_failure )
+
 let compare () =
   let open Benchmark in
   match spss (V eqaf_cmp, V eqaf_ncmp) (V stdlib_cmp, V stdlib_ncmp) with
-  | Error () -> equal_last_chance ()
+  | Error () -> compare_last_chance ()
   | Ok (eqaf, stdlib) ->
     if eqaf >= -30. && eqaf <= 30.
     then ( Fmt.pr "B¹ = %f, B² = %f.\n%!" eqaf stdlib ; exit_success )
     else
       ( Fmt.pr "Fail with B¹ = %f, B² = %f.\n%!" eqaf stdlib ;
-        exit_failure )
+        compare_last_chance () )
 
 let () =
   let _0 = equal () in
