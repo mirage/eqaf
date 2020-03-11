@@ -26,6 +26,10 @@ depends: [
 ]
 
 depopts: [
-  "cstruct" {>= "4.0.0"}
+  "cstruct"
   "bigarray-compat"
+]
+
+conflicts: [
+  "cstruct" {< "4.0.0"}
 ]
