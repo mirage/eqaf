@@ -1,3 +1,9 @@
+### v0.6 2020-03-11 Paris (France)
+
+- remove build dependency on dune (@CraigFe, #16)
+- add bigarray-compat and optional dependencies (@hannesm, #17)
+- add `select_int`, `one_if_not_zero`, `zero_if_not_zero` (@cfcs, @dinosaure, #19, #18)
+
 ### v0.5 2019-07-01 Paris (France)
 
 - Delete `min` and use `<>` operator to compare length on `equal` function
