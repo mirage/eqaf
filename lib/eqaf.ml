@@ -183,4 +183,32 @@ let[@inline always] select_int choose_b a b =
   let mask = ((- choose_b) lor choose_b) asr Sys.int_size in
   (a land (lnot mask)) lor (b land mask)
 
+external int_of_bool : bool -> int = "%identity"
+external bool_of_int : int -> bool = "%identity"
 
+let[@inline always] find_uint8 ~off ~len ~f str =
+  let i = ref (len - 1) in
+  let a = ref (lnot 0) in
+  while !i >= off do
+    let byte = get str !i in
+    let pred = int_of_bool (f byte) in
+    (* XXX(dinosaure): a composition of [f] with [bool_of_int] such as
+       [let f = bool_of_int <.> f in] implies an allocation (of a closure).
+       To be GC-free, we must store result of [f] into a register, and apply
+       [bool_of_int] then (introspection was done on OCaml 4.08.1). *)
+    a := select_int (((!i - off) land min_int) lor pred) !a !i ;
+    decr i ;
+  done ; !a
+
+let find_uint8 ?(off= 0) ~f str =
+  (* XXX(dinosaure): with this overload, OCaml is able to produce 2 [find_uint8].
+     One with [off= 0] and one other where [off] is an argument. I think it's about
+     cross-module optimization where a call to [find_uint8 ~f v] will directly call
+     the first one and a call to [find_uint8 ~off:x ~f v] will call the second one. *)
+  let len = String.length str in
+  find_uint8 ~off ~len ~f str
+
+let exists_uint8 ?off ~f str =
+  let v = find_uint8 ?off ~f str in
+  let r = select_int (v + 1) 0 1 in
+  bool_of_int r
