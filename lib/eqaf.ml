@@ -184,7 +184,7 @@ let[@inline always] select_int choose_b a b =
   (a land (lnot mask)) lor (b land mask)
 
 external int_of_bool : bool -> int = "%identity"
-external bool_of_int : int -> bool = "%identity"
+external unsafe_bool_of_int : int -> bool = "%identity"
 
 let[@inline always] find_uint8 ~off ~len ~f str =
   let i = ref (len - 1) in
@@ -211,4 +211,4 @@ let find_uint8 ?(off= 0) ~f str =
 let exists_uint8 ?off ~f str =
   let v = find_uint8 ?off ~f str in
   let r = select_int (v + 1) 0 1 in
-  bool_of_int r
+  unsafe_bool_of_int r
