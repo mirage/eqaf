@@ -21,14 +21,14 @@ let print ppf (n, m) =
   Bytes.fill tmp 0 l '#' ;
   Fmt.pf ppf "[%s] %d%%%!" (Bytes.unsafe_to_string tmp) (n * 100 / m)
 
-let samples = 1000
+let samples = 750
 
 let run t =
   let idx = ref 0 in
   let run = ref 0 in
   let (V fn) = t in
 
-  let m = Array.init samples (fun _ -> Array.init 2 (fun _ -> 0.0)) in
+  let m = Array.create_float (samples * 2) in
 
   reset () ;
   Fmt.pr "%a" print (0, samples) ;
@@ -47,8 +47,8 @@ let run t =
 
     let time_1 = Clock.now () in
 
-    m.(current_idx).(0) <- float_of_int current_run ;
-    m.(current_idx).(1) <- Int64.to_float (Int64.sub time_1 time_0) ;
+    m.((current_idx * 2) + 0) <- float_of_int current_run ;
+    m.((current_idx * 2) + 1) <- Int64.to_float (Int64.sub time_1 time_0) ;
 
     let next =
       (max : int -> int -> int) (int_of_float (float_of_int current_run *. 1.01)) (succ current_run) in
@@ -57,5 +57,5 @@ let run t =
 
   Fmt.pr "\r%a\n%!" print (samples, samples) ;
 
-  m
+  Array.init samples (fun i -> [| m.((i * 2) + 0); m.((i * 2) + 1) |])
 
