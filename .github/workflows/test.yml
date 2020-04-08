@@ -24,7 +24,7 @@ jobs:
           ocaml-version: ${{ matrix.ocaml-version }}
 
       - name: Install nasm
-        uses: ilammy/setup-nasm@v1.0
+        uses: ilammy/setup-nasm@v1
 
       - name: Install dependencies
         run: |
