@@ -91,19 +91,19 @@ let test_ccea fn_0 fn_1 =
     Fmt.epr "B²: %s.\n%!" err1 ;
     exit exit_failure
 
-let ccea fns_0 fns_1 =
-  Fmt.pr "> Start to test eqaf (B¹).\n%!" ;
+let ccea ~name_of_fns_0 ~name_of_fns_1 fns_0 fns_1 =
+  Fmt.pr "> Start to test %s (B¹).\n%!" name_of_fns_0 ;
   let eqaf = test_ccea (fst fns_0) (snd fns_0) in
-  Fmt.pr "> Start to test string.equal (B²).\n%!" ;
+  Fmt.pr "> Start to test %s (B²).\n%!" name_of_fns_1 ;
   let stdlib = test_ccea (fst fns_1) (snd fns_1) in
   match eqaf, stdlib with
   | Ok eqaf, Ok stdlib ->
     Ok (eqaf, stdlib)
   | Error (`Msg err), Ok _ ->
-    Fmt.epr "Got an error while processing eqaf: %s\n%!" err ;
+    Fmt.epr "Got an error while processing %s: %s\n%!" name_of_fns_0 err ;
     Error ()
   | Ok _, Error (`Msg err) ->
-    Fmt.epr "Got an error while processing string.equal: %s\n%!" err ;
+    Fmt.epr "Got an error while processing %s: %s\n%!" name_of_fns_1 err ;
     Error ()
   | Error (`Msg err0), Error (`Msg err1) ->
     Fmt.epr "Got errors while processing both:\n%!" ;
@@ -111,22 +111,22 @@ let ccea fns_0 fns_1 =
     Fmt.epr "B²> %s.\n%!" err1 ;
     Error ()
 
-let spss fns_0 fns_1 =
-  Fmt.pr "> Start to test eqaf (B¹).\n%!" ;
+let spss ~name_of_fns_0 ~name_of_fns_1 fns_0 fns_1 =
+  Fmt.pr "> Start to test %s (B¹).\n%!" name_of_fns_0 ;
   let eqaf = test_spss (fst fns_0) (snd fns_0) in
-  Fmt.pr "> Start to test string.equal (B²).\n%!" ;
+  Fmt.pr "> Start to test %s (B²).\n%!" name_of_fns_1 ;
   let stdlib = test_spss (fst fns_1) (snd fns_1) in
 
   match eqaf, stdlib with
   | Ok eqaf, Ok stdlib ->
-    Fmt.pr "eqaf: %f ns/run.\n%!" eqaf.(1) ;
-    Fmt.pr "string.equal: %f ns/run.\n%!" stdlib.(1) ;
+    Fmt.pr "%s: %f ns/run.\n%!" name_of_fns_0 eqaf.(1) ;
+    Fmt.pr "%s: %f ns/run.\n%!" name_of_fns_1 stdlib.(1) ;
     Ok (eqaf.(2), stdlib.(2))
   | Error (`Msg err), Ok _ ->
-    Fmt.epr "Got an error while processing eqaf: %s\n%!" err ;
+    Fmt.epr "Got an error while processing %s: %s\n%!" name_of_fns_0 err ;
     Error ()
   | Ok _, Error (`Msg err) ->
-    Fmt.epr "Got an error while processing string.equal: %s\n%!" err ;
+    Fmt.epr "Got an error while processing %s: %s\n%!" name_of_fns_1 err ;
     Error ()
   | Error (`Msg err0), Error (`Msg err1) ->
     Fmt.epr "Got errors while processing both:\n%!" ;
@@ -187,6 +187,9 @@ let spss fns_0 fns_1 =
 module Make (Check : sig 
     type ret
 
+    val eqaf_name : string
+    val stdlib_name : string
+
     val eqaf_true : unit -> ret
     val eqaf_false : unit -> ret
 
@@ -197,7 +200,11 @@ module Make (Check : sig
 
   let last_chance () =
     let open Benchmark in
-    match ccea (V eqaf_true, V eqaf_false) (V stdlib_true, V stdlib_false) with
+    match ccea
+            ~name_of_fns_0:eqaf_name
+            ~name_of_fns_1:stdlib_name
+            (V eqaf_true, V eqaf_false)
+            (V stdlib_true, V stdlib_false) with
     | Error () -> exit_failure
     | Ok (eqaf, stdlib) ->
       if eqaf >= -30. && eqaf <= 30.
@@ -206,7 +213,11 @@ module Make (Check : sig
   
   let test () =
     let open Benchmark in
-    match spss (V eqaf_true, V eqaf_false) (V stdlib_true, V stdlib_false) with
+    match spss
+            ~name_of_fns_0:eqaf_name
+            ~name_of_fns_1:stdlib_name
+            (V eqaf_true, V eqaf_false)
+            (V stdlib_true, V stdlib_false) with
     | Error () -> last_chance ()
     | Ok (eqaf, stdlib) ->
       if eqaf >= -30. && eqaf <= 30.
@@ -220,6 +231,9 @@ end
 module Equal = Make(struct
   type ret = bool
 
+  let eqaf_name = "Eqaf.equal"
+  let stdlib_name = "String.equal"
+
   let stdlib_true () = String.equal hash_eq_0 hash_eq_1
   let stdlib_false () = String.equal hash_neq_0 hash_neq_1
   
@@ -230,6 +244,9 @@ end)
 module Compare = Make(struct
   type ret = int
 
+  let eqaf_name = "Eqaf.compare"
+  let stdlib_name = "String.compare"
+
   let stdlib_true () = String.compare hash_eq_0 hash_eq_1
   let stdlib_false () = String.compare hash_neq_0 hash_neq_1
   
@@ -239,6 +256,9 @@ end)
 
 module Exists = Make(struct
   type ret = bool
+
+  let eqaf_name = "Eqaf.exists_uint8"
+  let stdlib_name = "String.contains"
 
   let stdlib_true () = String.contains hash_eq_0 chr_into_hash_eq_0
   let stdlib_false () = String.contains hash_neq_0 random_chr
