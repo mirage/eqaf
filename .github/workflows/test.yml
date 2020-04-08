@@ -28,7 +28,7 @@ jobs:
           opam pin add -n eqaf .
 
       - name: Build
-        run: opam exec -- dune build
+        run: opam exec -- dune build -p eqaf
 
       - name: Test
-        run: opam exec -- dune runtest --no-buffer -j 1
+        run: opam exec -- dune runtest -p eqaf --no-buffer -j 1
