@@ -23,9 +23,11 @@ let random length =
 
 let hash_eq_0 = random 4096
 let hash_eq_1 = Bytes.to_string (Bytes.of_string hash_eq_0)
+let chr_into_hash_eq_0 = hash_eq_0.[Random.int 4096]
 
 let () = assert (hash_eq_0 != hash_eq_1)
 let () = assert (hash_eq_0 = hash_eq_1)
+let () = assert (String.contains hash_eq_0 chr_into_hash_eq_0)
 
 let hash_neq_0 = random 4096
 let hash_neq_1 =
@@ -34,8 +36,15 @@ let hash_neq_1 =
     let res = random 4096 in
     if res = hash_neq_0 then go (pred limit) else res in
   go 10
+let random_chr =
+  let rec go limit =
+    if limit <= 0 then failwith "Impossible to generate a byte which does not appear into hash_neq_0." ;
+    let res = Char.chr (Random.int 256) in
+    if not (String.contains hash_neq_0 res) then res else go (pred limit) in
+  go 10
 
 let () = assert (hash_neq_0 <> hash_neq_1)
+let () = assert (not (String.contains hash_neq_0 random_chr))
 
 let error_msgf fmt = Fmt.kstrf (fun err -> Error (`Msg err)) fmt
 
@@ -81,18 +90,6 @@ let test_ccea fn_0 fn_1 =
     Fmt.epr "B¹: %s.\n%!" err0 ;
     Fmt.epr "B²: %s.\n%!" err1 ;
     exit exit_failure
-
-let stdlib_eq () = String.equal hash_eq_0 hash_eq_1
-let stdlib_neq () = String.equal hash_neq_0 hash_neq_1
-
-let eqaf_eq () = Eqaf.equal hash_eq_0 hash_eq_1
-let eqaf_neq () = Eqaf.equal hash_neq_0 hash_neq_1
-
-let stdlib_cmp () = String.compare hash_eq_0 hash_eq_1
-let stdlib_ncmp () = String.compare hash_neq_0 hash_neq_1
-
-let eqaf_cmp () = Eqaf.compare_be hash_eq_0 hash_eq_1
-let eqaf_ncmp () = Eqaf.compare_be hash_neq_0 hash_neq_1
 
 let ccea fns_0 fns_1 =
   Fmt.pr "> Start to test eqaf (B¹).\n%!" ;
@@ -187,49 +184,77 @@ let spss fns_0 fns_1 =
    about time needed to compute [equal] function. So, in a virtual context we can
    have some noises when we record measures (in [Benchmark]). *)
 
-let equal_last_chance () =
-  let open Benchmark in
-  match ccea (V eqaf_eq, V eqaf_neq) (V stdlib_eq, V stdlib_neq) with
-  | Error () -> exit_failure
-  | Ok (eqaf, stdlib) ->
-    if eqaf >= -30. && eqaf <= 30.
-    then ( Fmt.pr "Z¹ = %f, Z² = %f.\n%!" eqaf stdlib ; exit_success )
-    else ( Fmt.pr "Z¹ = %f, Z² = %f.\n%!" eqaf stdlib ; exit_failure )
+module Make (Check : sig 
+    type ret
 
-let equal () =
-  let open Benchmark in
-  match spss (V eqaf_eq, V eqaf_neq) (V stdlib_eq, V stdlib_neq) with
-  | Error () -> equal_last_chance ()
-  | Ok (eqaf, stdlib) ->
-    if eqaf >= -30. && eqaf <= 30.
-    then ( Fmt.pr "B¹ = %f, B² = %f.\n%!" eqaf stdlib ; exit_success )
-    else
-      ( Fmt.pr "Fail with B¹ = %f, B² = %f.\n%!" eqaf stdlib ;
-        Fmt.pr "> Start to compute Z.\n%!" ;
-        equal_last_chance () )
+    val eqaf_true : unit -> ret
+    val eqaf_false : unit -> ret
 
-let compare_last_chance () =
-  let open Benchmark in
-  match ccea (V eqaf_cmp, V eqaf_ncmp) (V stdlib_cmp, V stdlib_ncmp) with
-  | Error () -> exit_failure
-  | Ok (eqaf, stdlib) ->
-    if eqaf >= -30. && eqaf <= 30.
-    then ( Fmt.pr "Z¹ = %f, Z² = %f.\n%!" eqaf stdlib ; exit_success )
-    else ( Fmt.pr "Z¹ = %f, Z² = %f.\n%!" eqaf stdlib ; exit_failure )
+    val stdlib_true : unit -> ret
+    val stdlib_false : unit -> ret
+  end) = struct
+  open Check
 
-let compare () =
-  let open Benchmark in
-  match spss (V eqaf_cmp, V eqaf_ncmp) (V stdlib_cmp, V stdlib_ncmp) with
-  | Error () -> compare_last_chance ()
-  | Ok (eqaf, stdlib) ->
-    if eqaf >= -30. && eqaf <= 30.
-    then ( Fmt.pr "B¹ = %f, B² = %f.\n%!" eqaf stdlib ; exit_success )
-    else
-      ( Fmt.pr "Fail with B¹ = %f, B² = %f.\n%!" eqaf stdlib ;
-        compare_last_chance () )
+  let last_chance () =
+    let open Benchmark in
+    match ccea (V eqaf_true, V eqaf_false) (V stdlib_true, V stdlib_false) with
+    | Error () -> exit_failure
+    | Ok (eqaf, stdlib) ->
+      if eqaf >= -30. && eqaf <= 30.
+      then ( Fmt.pr "Z¹ = %f, Z² = %f.\n%!" eqaf stdlib ; exit_success )
+      else ( Fmt.pr "Z¹ = %f, Z² = %f.\n%!" eqaf stdlib ; exit_failure )
+  
+  let test () =
+    let open Benchmark in
+    match spss (V eqaf_true, V eqaf_false) (V stdlib_true, V stdlib_false) with
+    | Error () -> last_chance ()
+    | Ok (eqaf, stdlib) ->
+      if eqaf >= -30. && eqaf <= 30.
+      then ( Fmt.pr "B¹ = %f, B² = %f.\n%!" eqaf stdlib ; exit_success )
+      else
+        ( Fmt.pr "Fail with B¹ = %f, B² = %f.\n%!" eqaf stdlib ;
+          Fmt.pr "> Start to compute Z.\n%!" ;
+          last_chance () )
+end
+
+module Equal = Make(struct
+  type ret = bool
+
+  let stdlib_true () = String.equal hash_eq_0 hash_eq_1
+  let stdlib_false () = String.equal hash_neq_0 hash_neq_1
+  
+  let eqaf_true () = Eqaf.equal hash_eq_0 hash_eq_1
+  let eqaf_false () = Eqaf.equal hash_neq_0 hash_neq_1
+end)
+
+module Compare = Make(struct
+  type ret = int
+
+  let stdlib_true () = String.compare hash_eq_0 hash_eq_1
+  let stdlib_false () = String.compare hash_neq_0 hash_neq_1
+  
+  let eqaf_true () = Eqaf.compare_be hash_eq_0 hash_eq_1
+  let eqaf_false () = Eqaf.compare_be hash_neq_0 hash_neq_1
+end)
+
+module Exists = Make(struct
+  type ret = bool
+
+  let stdlib_true () = String.contains hash_eq_0 chr_into_hash_eq_0
+  let stdlib_false () = String.contains hash_neq_0 random_chr
+
+  let f (v : int) = v = Char.code chr_into_hash_eq_0
+  let eqaf_true () = Eqaf.exists_uint8 ~f hash_eq_0
+  let f (v : int) = v = Char.code random_chr
+  let eqaf_false () = Eqaf.exists_uint8 ~f hash_neq_0
+end)
 
 let () =
-  let _0 = equal () in
-  let _1 = compare () in
-  if _0 = exit_success && _1 = exit_success
+  let _0 = Equal.test () in
+  let _1 = Compare.test () in
+  let _2 = Exists.test () in
+
+  if _0 = exit_success
+  && _1 = exit_success
+  && _2 = exit_success
   then () else exit exit_failure
