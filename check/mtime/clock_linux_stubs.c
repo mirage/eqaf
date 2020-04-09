@@ -29,10 +29,12 @@ uint64_t
 clock_linux_get_time_native(__unit ())
 {
   struct timespec ts;
+  unsigned hi, lo;
+  __asm__ __volatile__ ("rdtsc" : "=a"(lo), "=d"(hi));
 
   (void) clock_gettime(CLOCK_MONOTONIC, &ts);
   // XXX(dinosaure): assume that it will never fail.
   // [caml_invalid_argument] allocs.
 
-  return (ts.tv_sec * 1000000000LL + ts.tv_nsec);
+  return (((unsigned long long) lo) | (((unsigned long long) hi) << 32));
 }
