@@ -2,7 +2,7 @@
 
 if [[ "$OSTYPE" == "linux-gnu" ]]; then
   nasm -felf64 asm_sleep.S
-elif [[ "$OSTYPE" == "darwin" ]]; then
+elif [[ "$OSTYPE" == "darwin"* ]]; then
   nasm -fmacho64 asm_sleep.S
 elif [[ "$OSTYPE" == "msys" ]]; then
   nasm -fwin64 asm_sleep.S
