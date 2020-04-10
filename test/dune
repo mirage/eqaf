@@ -10,7 +10,7 @@
 (rule
  (targets test_branch)
  (deps build.sh (:src asm_sleep.S time.c test_branch.ml))
- (action (bash ./build.sh)))
+ (action (bash "bash build.sh")))
 
 (alias
  (name runtest)
