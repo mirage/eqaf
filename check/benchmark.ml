@@ -21,7 +21,7 @@ let print ppf (n, m) =
   Bytes.fill tmp 0 l '#' ;
   Fmt.pf ppf "[%s] %d%%%!" (Bytes.unsafe_to_string tmp) (n * 100 / m)
 
-let samples = 500
+let samples = 750
 
 let run t =
   let idx = ref 0 in
