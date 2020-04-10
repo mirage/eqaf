@@ -36,4 +36,4 @@ jobs:
         run: opam exec -- dune build -p eqaf
 
       - name: Test
-        run: opam exec -- dune runtest -p eqaf --no-buffer -j 1
+        run: opam exec -- dune runtest -p eqaf --no-buffer -j 1 --verbose
