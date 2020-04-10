@@ -28,11 +28,15 @@ clock_linux_get_time_byte(__unit ())
 uint64_t
 clock_linux_get_time_native(__unit ())
 {
-  struct timespec ts;
+  // struct timespec ts;
   unsigned hi, lo;
   __asm__ __volatile__ ("rdtsc" : "=a"(lo), "=d"(hi));
 
-  (void) clock_gettime(CLOCK_MONOTONIC, &ts);
+  // XXX(dinosaure): [clock_gettime] costs a lot and are
+  // not really precise. [rdtsc] (Read Time Stamp Counter)
+  // is more reliable.
+
+  // (void) clock_gettime(CLOCK_MONOTONIC, &ts);
   // XXX(dinosaure): assume that it will never fail.
   // [caml_invalid_argument] allocs.
 

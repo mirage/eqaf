@@ -21,7 +21,7 @@ let print ppf (n, m) =
   Bytes.fill tmp 0 l '#' ;
   Fmt.pf ppf "[%s] %d%%%!" (Bytes.unsafe_to_string tmp) (n * 100 / m)
 
-let samples = 750
+let samples = 500
 
 let run t =
   let idx = ref 0 in
@@ -37,9 +37,11 @@ let run t =
     let current_run = !run in
     let current_idx = !idx in
 
-    Fmt.pr "\r%a" print (current_idx, samples) ;
-
-    if current_run = 0 then stabilize_garbage_collector () ;
+    (* XXX(dinosaure): GC and prints can put noise on our samples.
+       - GC is not predictable
+       - prints can add a latency on I/O *)
+    (* Fmt.pr "\r%a" print (current_idx, samples) ; *)
+    (* if current_run = 0 then stabilize_garbage_collector () ; *)
 
     let time_0 = Clock.now () in
 

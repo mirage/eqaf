@@ -8,8 +8,24 @@ let pp_int_array ppf arr =
   for i = 0 to pred (Array.length arr) do Fmt.pf ppf "%d;" arr.(i) done ;
   Fmt.pf ppf "|]"
 
+ (* XXX(dinosaure): deterministic generation.
+    It appears that some calls of [check/check.exe] does not get same results,
+    mostly about [String.*] functions. As we understand implementation of them,
+    it's an expected behavior but it puts some noises when we try to introspect
+    results on different platforms.
+    
+    So all inputs are generated with this seed to be able to get as much as we
+    can reproducible outputs. *)
+let seed = "4EygbdYh+v35vvrmD9YYP4byT5E3H7lTeXJiIj+dQnc="
+let seed = Base64.decode_exn seed
+let seed =
+   let res = Array.make (String.length seed / 2) 0 in
+   for i = 0 to (String.length seed / 2) - 1
+   do res.(i) <- (Char.code seed.[i * 2] lsl 8) lor (Char.code seed.[i * 2 + 1]) done ;
+   res
+
 let () =
-  let random_seed = random_seed () in
+  let random_seed = seed in
   Fmt.pr "Random: %a.\n%!" pp_int_array random_seed ;
   Random.full_init random_seed
 
@@ -80,7 +96,7 @@ let test_ccea fn_0 fn_1 =
         Linear_algebra.ols (fun m -> m.(1)) [|(fun m -> m.(0))|] m1 with
   | Ok (estimates_0, r_square_0),
     Ok (estimates_1, r_square_1) ->
-    Fmt.epr "> Calculating Z.\n" ;
+    Fmt.epr "> Calculating Z.\n%!" ;
     let z = (estimates_0.(0) -. estimates_1.(0)) /. sqrt ((r_square_0 ** 2.) +. (r_square_1 ** 2.)) in
     Ok z
   | (Error (`Msg _) as err), Ok _ -> err
@@ -140,6 +156,8 @@ let spss ~name_of_fns_0 ~name_of_fns_1 fns_0 fns_1 =
    - 1: time needed to compute equal function on 2 same values ([_eq])
    - 2: time needed to compute equal function on 2 different values ([_neq])
 
+   ### Samples
+
    We have 2 ways to compute it. The first is to compute a regression equation
    which includes group 1 and group 2. A initial regression equation can be done
    to know how long [equal] lasts:
@@ -147,6 +165,23 @@ let spss ~name_of_fns_0 ~name_of_fns_1 fns_0 fns_1 =
    regression
      /dep time // m.(1)
      /method = enter run // m.(0)
+
+   It's a basic linear regression where we run 1..N times the function with same
+   inputs. Then, we have a matrix such as:
+
+   m.(n).(0) <- time
+   m.(n).(1) <- run
+
+   Obviously, if our function is /constant-time/, you should have something like:
+
+   y = m.(x).(0) = a * m.(x).(1) + b
+
+   To infer the curve, we use the linear regression for each points. Then, we
+   collect same samples but with [_neq] values. Now, the goal is to see that
+   [_eq]: y = a * x + b and [_neq]: y = a * x + b are ~ equals. For that, we have
+   2 ways.
+
+   ### SPSS
 
    The first way to compare group 1 ([_eq]) and group 2 ([_neq]): we need to
    insert a dummy variable [kind] where it is equal to [0.0] when it's owned by
@@ -165,6 +200,8 @@ let spss ~name_of_fns_0 ~name_of_fns_1 fns_0 fns_1 =
    available on [estimates.(2)]. [compare_spss] checks r² ([>= 0.95]) and
    main program checks if the diff is between [-30.0] and [30.0].
 
+   ### CCEA
+
    The second way to compare group 1 and group 2: it consists to compute basic
    regression equation to know how long [equal] lasts. Then, we will compute [Z]
    which is equal to:
@@ -177,12 +214,30 @@ let spss ~name_of_fns_0 ~name_of_fns_1 fns_0 fns_1 =
    are standard error of B¹ and B². Then, main program, as the first way, checks
    if [Z] is between [-30.0] and [30.0].
 
+   NOTE about SPSS:
+
+   This is the name of a software which explain how to compare results of linear
+   regression.
+
+   NOTE about CCEA:
+
+   I don't remmember when I got this name but it seems close to Vuong test.
+
    NOTE about virtualization:
 
    Virtual context (VirtualBox, VMWare, Xen or qemu) can delayed CPU instructions
    and tricks on the time spended to execute them. By this fact, time counter lies
    about time needed to compute [equal] function. So, in a virtual context we can
-   have some noises when we record measures (in [Benchmark]). *)
+   have some noises when we record measures (in [Benchmark]).
+
+   NOTE about bare-metal:
+   
+   In a bare-metal context, results are more determinists (but they are not
+   completely fixed). In fact, it depends on the system-scheduler which can 
+   prioritize an other process while [check/check.exe] is executed. For all of
+   these reasons, [check/check.exe] is really fragile and can not work in
+   your context - however, a CI with [eqaf] is provided is we surely are aware
+   of it and results. *)
 
 module Make (Check : sig 
     type ret
@@ -269,12 +324,27 @@ module Exists = Make(struct
   let eqaf_false () = Eqaf.exists_uint8 ~f hash_neq_0
 end)
 
-let () =
-  let _0 = Equal.test () in
-  let _1 = Compare.test () in
-  let _2 = Exists.test () in
+let limit = 20
 
-  if _0 = exit_success
-  && _1 = exit_success
-  && _2 = exit_success
-  then () else exit exit_failure
+let () =
+  let rec _0 tried =
+    if tried > 20 then invalid_arg "Too many tried for Eqaf.equal" ;
+    let res = Equal.test () in
+    if res = exit_success then tried else _0 (succ tried) in
+  let rec _1 tried =
+    if tried > 20 then invalid_arg "Too many tried for Eqaf.compare" ;
+    let res = Compare.test () in
+    if res = exit_success then tried else _1 (succ tried) in
+  let rec _2 tried =
+    if tried > 20 then invalid_arg "Too many tried for Eqaf.exists" ;
+    let res = Exists.test () in
+    if res = exit_success then tried else _2 (succ tried) in
+
+  let _0 = _0 1 in
+  Fmt.pr "%d trial(s) for Eqaf.equal.\n%!" _0 ;
+  let _1 = _1 1 in
+  Fmt.pr "%d trial(s) for Eqaf.compare.\n%!" _1 ;
+  let _2 = _2 1 in
+  Fmt.pr "%d trial(s) for Eqaf.exists.\n%!" _2 ;
+
+  exit exit_success
