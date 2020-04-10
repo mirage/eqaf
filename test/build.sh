@@ -1,5 +1,16 @@
 #!/bin/bash
 
-nasm -felf64 asm_sleep.S
+if [[ "$OSTYPE" == "linux-gnu" ]]; then
+  nasm -felf64 asm_sleep.S
+elif [[ "$OSTYPE" == "darwin" ]]; then
+  nasm -fmacho64 asm_sleep.S
+elif [[ "$OSTYPE" == "msys" ]]; then
+  nasm -fwin64 asm_sleep.S
+elif [[ "$OSTYPE" == "cygwin" ]]; then
+  nasm -fwin64 asm_sleep.S
+else
+  echo "Impossible to compile asm_sleep.S (unknown OS: $OSTYPE)"
+fi
+
 ocamlopt -c test_branch.ml
 ocamlopt asm_sleep.o time.c test_branch.ml -o test_branch
