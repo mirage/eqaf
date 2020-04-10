@@ -3,7 +3,9 @@
 
 #include <time.h>
 
+#ifndef __unused
 #define __unused(x) x __attribute((unused))
+#endif
 #define __unit() value __unused(unit)
 
 CAMLprim value
