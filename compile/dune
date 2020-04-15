@@ -1,0 +1,8 @@
+(ocamllex lexer)
+(menhir (flags --table --canonical) (modules parser))
+
+(executable
+ (name gas)
+ (modules gas expr prgm heap instr size address lexer parser
+    asm refl cmp register registers)
+ (libraries crowbar bos bigstringaf menhirLib))
