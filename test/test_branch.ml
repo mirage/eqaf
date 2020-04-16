@@ -96,7 +96,7 @@ let[@inline always] select_int choose_b a b =
    - select_int
    [check/check] is too huge. *)
 
-external time : unit -> (int64 [@unboxed]) = "unavailable" "caml_time" [@@noalloc]
+let time () = Clock.now ()
 
 let fdiv a b = a /. b
 
