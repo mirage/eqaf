@@ -1,6 +1,6 @@
 (executable
  (name check)
- (libraries eqaf clock))
+ (libraries eqaf base64 clock))
 
 (alias
  (name runtest)

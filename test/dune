@@ -1,5 +1,6 @@
 (executable
  (name test)
+ (modules test)
  (libraries alcotest eqaf))
 
 (alias
@@ -7,12 +8,12 @@
  (deps (:test test.exe))
  (action (run %{test} --color=always)))
 
-(rule
- (targets test_branch)
- (deps build.sh (:src asm_sleep.S time.c test_branch.ml))
- (action (run ./build.sh)))
+(executable
+ (name test_branch)
+ (modules test_branch)
+ (libraries clock unix eqaf))
 
 (alias
  (name runtest)
- (deps (:test test_branch))
+ (deps (:test test_branch.exe))
  (action (run %{test})))
