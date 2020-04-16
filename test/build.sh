@@ -11,6 +11,3 @@ elif [[ "$OSTYPE" == "cygwin" ]]; then
 else
   echo "Impossible to compile asm_sleep.S (unknown OS: $OSTYPE)"
 fi
-
-ocamlopt -c test_branch.ml
-ocamlopt asm_sleep.o time.c test_branch.ml -o test_branch
