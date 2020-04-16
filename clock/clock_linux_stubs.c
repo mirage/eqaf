@@ -20,13 +20,13 @@ clock_linux_get_time_byte(__unit ())
   struct timespec ts;
 
   if (clock_gettime(CLOCK_MONOTONIC, &ts))
-    caml_invalid_argument("bechamel.clock: unsupported clock");
+    caml_invalid_argument("clock: unsupported clock");
 
   return copy_int64(ts.tv_sec * 1000000000LL + ts.tv_nsec);
 }
 
 uint64_t
-clock_linux_get_time_native(__unit ())
+clock_linux_get_tick(__unit ())
 {
   // struct timespec ts;
   unsigned hi, lo;
@@ -36,9 +36,17 @@ clock_linux_get_time_native(__unit ())
   // not really precise. [rdtsc] (Read Time Stamp Counter)
   // is more reliable.
 
-  // (void) clock_gettime(CLOCK_MONOTONIC, &ts);
+  return (((unsigned long long) lo) | (((unsigned long long) hi) << 32));
+}
+
+uint64_t
+clock_linux_get_time_native(__unit ())
+{
+  struct timespec ts;
+
+  (void) clock_gettime(CLOCK_MONOTONIC, &ts);
   // XXX(dinosaure): assume that it will never fail.
   // [caml_invalid_argument] allocs.
 
-  return (((unsigned long long) lo) | (((unsigned long long) hi) << 32));
+  return (ts.tv_sec * 1000000000LL + ts.tv_nsec);
 }
