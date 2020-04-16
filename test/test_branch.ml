@@ -48,17 +48,7 @@ let select_int_ops =
   Format.printf "[select_int]:                  %d operation(s).\n%!" !operation ;
   !operation
 
-(* To be able to over-evaluated time needed by our functions, we plug in front of
-   our bitwise operations a special sleep. See [asm_sleep.S], it's the most light
-   sleep instruction that what we can. Then, compilation of this file replace any
-   call of `eqaf_sleep` by:
-
-     callq xxxxxx <eqaf_sleep>
-
-   Which pushes amd pops on the stack pointer to the caller but it still outside
-   any branches. *)
-
-external eqaf_sleep : unit -> unit = "eqaf_sleep" [@@noalloc]
+let eqaf_sleep () = Unix.sleep 1
 
 let logical_shift_right a b = eqaf_sleep () ; a lsr b
 let logical_or a b = eqaf_sleep () ; a lor b

@@ -11,14 +11,7 @@
 (executable
  (name test_branch)
  (modules test_branch)
- (link_deps asm_sleep.o)
- (ocamlopt_flags (:standard) test/asm_sleep.o)
  (libraries clock unix eqaf))
-
-(rule
- (targets asm_sleep.o)
- (deps asm_sleep.S build.sh)
- (action (bash "bash build.sh")))
 
 (alias
  (name runtest)
