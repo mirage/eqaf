@@ -34,6 +34,7 @@ jobs:
 
       - name: Build
         run: opam exec -- dune build -p eqaf
-
-      - name: Test
-        run: opam exec -- dune runtest -p eqaf --no-buffer -j 1 --verbose
+      - name: Simple tests
+        run: opam exec -- dune exec test/test.exe
+      - name: Branch tests
+        run: opam exec -- dune exec test/test_branch.exe
