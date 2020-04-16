@@ -87,4 +87,9 @@ val select_int : int -> int -> int -> int
     adversary to determine anything about the values of [choose_b], [a], or [b]. *)
 
 val find_uint8 : ?off:int -> f:(int -> bool) -> string -> int
+(** [find_uint8 ?off ~f v] returns the index of the first occurrence which
+    respects the predicate [f] in string [v]. Otherwise, it returns [-1]. *)
+
 val exists_uint8 : ?off:int -> f:(int -> bool) -> string -> bool
+(** [exists_uint8 ?off ~f v] tests if an occurrence respects the predicate
+    [f] in the string [v]. *)

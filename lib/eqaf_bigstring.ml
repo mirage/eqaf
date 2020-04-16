@@ -80,3 +80,27 @@ let compare_be a b =
   if al < bl then 1
   else if al > bl then (-1)
   else compare_be ~ln:al (* = bl *) a b
+
+(* XXX(dinosaure): see [eqaf.ml] for this part. *)
+
+external int_of_bool : bool -> int = "%identity"
+external unsafe_bool_of_int : int -> bool = "%identity"
+
+let[@inline always] find_uint8 ~off ~len ~f str =
+  let i = ref (len - 1) in
+  let a = ref (lnot 0) in
+  while !i >= off do
+    let byte = get str !i in
+    let pred = int_of_bool (f byte) in
+    a := Eqaf.select_int (((!i - off) land min_int) lor pred) !a !i ;
+    decr i ;
+  done ; !a
+
+let find_uint8 ?(off= 0) ~f str =
+  let len = length str in
+  find_uint8 ~off ~len ~f str
+
+let exists_uint8 ?off ~f str =
+  let v = find_uint8 ?off ~f str in
+  let r = Eqaf.select_int (v + 1) 0 1 in
+  unsafe_bool_of_int r
