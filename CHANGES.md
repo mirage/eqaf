@@ -1,3 +1,8 @@
+### v0.7 2020-04-16 Paris (France)
+
+- Add `find_uint8` (@dinosaure, @cfcs, #20)
+- Add `exists_uint8` (@dinosaure, @cfcs, #20)
+
 ### v0.6 2020-03-11 Paris (France)
 
 - remove build dependency on dune (@CraigFe, #16)
