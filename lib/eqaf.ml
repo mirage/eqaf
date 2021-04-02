@@ -346,6 +346,7 @@ let lowercase_ascii src =
   (* ct version of String.lowercase_ascii *)
   String.map
     ( fun ch -> let n = Char.code ch in
+      (* 0x41 is 'A'; 0x5a is 'Z'; 0x20 controls case for ASCII letters *)
       select_a_if_in_range ~low:0x41 ~high:0x5a ~n (n lor 0x20) (n)
       |> char_chr
     ) src
@@ -354,6 +355,7 @@ let uppercase_ascii src =
   (* ct version of String.uppercase_ascii *)
   String.map
     ( fun ch -> let n = Char.code ch in
+      (* 0x61 is 'a'; 0x7a is 'z'; 0x20 controls case for ASCII letters *)
       select_a_if_in_range ~low:0x61 ~high:0x7a ~n (n lxor 0x20) (n)
       |> char_chr
     ) src
