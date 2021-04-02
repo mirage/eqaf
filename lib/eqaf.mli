@@ -107,7 +107,7 @@ val divmod : x:int32 -> m:int32 -> int32 * int32
 
     @raise Invalid_argument when [not (0 < m && m < 16384)].
 
-    @see "supercop/crypto_kem/sntrup761/ref/uint32.c" Adapted from the NTRU Prime team's algorithm from [supercop/sntrup761].
+    @see "supercop/crypto_kem/sntrup761/ref/uint32.c" Adapted from the NTRU Prime team's algorithm from [supercop/sntrup761], see round-2 NTRU Prime submission to NISTPQC (March 2019).
 *)
 
 (** {1:stringutil String utilities} *)
