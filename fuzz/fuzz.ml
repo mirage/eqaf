@@ -1,6 +1,12 @@
 open Crowbar
 
 let () =
+  add_test ~name:"bool_of_int" [ int ]
+  @@ fun n ->
+  let result = Eqaf.bool_of_int n in
+  check_eq ~eq:(=) (if n = 0 then false else true) result
+
+let () =
   add_test ~name:"select_a_if_in_range"
     [ range max_int ; range max_int ; int; range 10000; range 10000 ]
   @@ fun low high n a b ->

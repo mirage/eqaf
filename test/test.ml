@@ -32,6 +32,20 @@ let find str chr index =
   let res = Eqaf.find_uint8 ~f:((=) (Char.code chr)) str in
   Alcotest.(check int) "result" res index
 
+let int_of_bool bool expect =
+  Alcotest.test_case
+    (Fmt.strf
+       "int_of_bool %B = %d" bool expect
+    ) `Quick @@ fun ()->
+  Alcotest.(check int) "result" expect (Eqaf.int_of_bool bool)
+
+let bool_of_int desc n expect =
+  Alcotest.test_case
+    (Fmt.strf
+       "int_of_bool %s = %B" desc expect
+    ) `Quick @@ fun ()->
+  Alcotest.(check bool) "result" expect (Eqaf.bool_of_int n)
+
 let select_a_if_in_range (low,high) n a b expect =
   Alcotest.test_case
     (Fmt.strf
@@ -118,6 +132,14 @@ let () =
               ; find "aabb" 'b' 2
               ; find "aabb" 'a' 0
               ; find "aaab" 'b' 3 ]
+    ; "int_of_bool", [ int_of_bool false 0 (* exhaustive :-) *)
+                     ; int_of_bool true  1]
+    ; "bool_of_int", [ bool_of_int "0" 0 false
+                     ; bool_of_int "-1" ~-1 true
+                     ; bool_of_int "2" 2 true
+                     ; bool_of_int "max_int" max_int true
+                     ; bool_of_int "min_int" min_int true
+                     ; bool_of_int "1" 1 true ]
     ; "select_a_if_in_range",
       [ select_a_if_in_range (0,3)   0 22 30 22
       ; select_a_if_in_range (0,3)   1 22 30 22
