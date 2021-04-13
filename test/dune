@@ -6,10 +6,9 @@
 (rule
  (alias runtest)
  (locks singleton)
- (deps
-  (:test test.exe))
- (action
-  (run %{test} --color=always)))
+ (package eqaf)
+ (deps (:test test.exe))
+ (action (run %{test} --color=always)))
 
 (executable
  (name test_branch)
@@ -19,7 +18,6 @@
 (rule
  (alias runtest)
  (locks singleton)
- (deps
-  (:test test_branch.exe))
- (action
-  (run %{test})))
+ (package eqaf)
+ (deps (:test test_branch.exe))
+ (action (run %{test})))
