@@ -15,6 +15,20 @@ let () =
   check_eq ~eq:(=) (if low <= n && n <= high then a else b) choice
 
 let () =
+  add_test ~name:"uppercase_ascii" [ bytes ]
+  @@ fun raw_str ->
+  check_eq ~eq:String.equal
+    (String.uppercase_ascii raw_str)
+    (Eqaf.uppercase_ascii raw_str)
+
+let () =
+  add_test ~name:"lowercase_ascii" [ bytes ]
+  @@ fun raw_str ->
+  check_eq ~eq:String.equal
+    (String.lowercase_ascii raw_str)
+    (Eqaf.lowercase_ascii raw_str)
+
+let () =
   add_test ~name:"divmod" [ int32 ; int32 ]
   @@ fun x m ->
   try
