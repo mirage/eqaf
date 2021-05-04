@@ -3,8 +3,8 @@
  (modules test)
  (libraries alcotest eqaf))
 
-(alias
- (name runtest)
+(rule
+ (alias runtest)
  (deps (:test test.exe))
  (action (run %{test} --color=always)))
 
@@ -13,7 +13,7 @@
  (modules test_branch)
  (libraries clock unix eqaf))
 
-(alias
- (name runtest)
+(rule
+ (alias runtest)
  (deps (:test test_branch.exe))
  (action (run %{test})))

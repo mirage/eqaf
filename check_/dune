@@ -1,0 +1,7 @@
+(executable
+ (name equal)
+ (modules check equal)
+ (libraries eqaf)
+ (foreign_stubs 
+  (language c)
+  (names cpu_cycle)))

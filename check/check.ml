@@ -162,7 +162,6 @@ let spss ~name_of_fns_0 ~name_of_fns_1 fns_0 fns_1 =
 
 (* XXX(dinosaure): this program try to compute diff between 2 coefficient
    regressions:
-
    - 1: time needed to compute equal function on 2 same values ([_eq])
    - 2: time needed to compute equal function on 2 different values ([_neq])
 
@@ -225,23 +224,19 @@ let spss ~name_of_fns_0 ~name_of_fns_1 fns_0 fns_1 =
    if [Z] is between [-30.0] and [30.0].
 
    NOTE about SPSS:
-
    This is the name of a software which explain how to compare results of linear
    regression.
 
    NOTE about CCEA:
-
    I don't remmember when I got this name but it seems close to Vuong test.
 
    NOTE about virtualization:
-
    Virtual context (VirtualBox, VMWare, Xen or qemu) can delayed CPU instructions
    and tricks on the time spended to execute them. By this fact, time counter lies
    about time needed to compute [equal] function. So, in a virtual context we can
    have some noises when we record measures (in [Benchmark]).
 
    NOTE about bare-metal:
-   
    In a bare-metal context, results are more determinists (but they are not
    completely fixed). In fact, it depends on the system-scheduler which can 
    prioritize an other process while [check/check.exe] is executed. For all of
