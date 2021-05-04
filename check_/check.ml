@@ -61,6 +61,15 @@ let prepare_percentile ctx =
 
 external cpu_cycles : unit -> (int64[@unboxed]) = "" "caml_cpu_cycles" [@@noalloc]
 
+let stabilize_gc () =
+  let rec go fail last_heap_live_words =
+    if fail <= 0 then failwith "Unable to stabilize the number of live words in the major heap." ;
+    Gc.compact () ;
+    let stat = Gc.stat () in
+    if stat.Gc.live_words <> last_heap_live_words
+    then go (pred fail) stat.Gc.live_words in
+  go 10 0
+
 let measure ctx =
   let V f = ctx.computation in
   let do_one_computation = f `Init in
@@ -110,8 +119,7 @@ let max_test ctx =
 let t_threshold_bananas = 500.
 let t_threshold_moderate = 10.
 
-exception No_leakage_evidence_yet
-exception Leakage_found
+type result = Leakage_found | No_leakage_evidence_yet
 
 let report ctx =
   let t = max_test ctx in
@@ -123,29 +131,24 @@ let report ctx =
   then begin
     Format.printf "not enough measurements (%.0f still to go).\n%!"
       (_enough_measurements' -. number_traces_max_t) ;
-    raise No_leakage_evidence_yet
-  end ;
-  Format.printf "max t: %+7.2f, max tau: %.2e, (5/tau)^2: %.2e."
-    max_t max_tau (25. /. (max_tau *. max_tau)) ;
-  if max_t > t_threshold_bananas
-  then ( Format.printf " Definitely not constant time.\n%!" ; raise Leakage_found ) ;
-  if max_t > t_threshold_moderate
-  then ( Format.printf " Probably not constant time.\n%!" ; raise Leakage_found ) ;
-  if max_t < t_threshold_moderate
-  then ( Format.printf " For the moment, may be constant time.\n%!" ) ;
-  raise No_leakage_evidence_yet
+    No_leakage_evidence_yet
+  end else begin 
+    Format.printf "max t: %+7.2f, max tau: %.2e, (5/tau)^2: %.2e."
+      max_t max_tau (25. /. (max_tau *. max_tau)) ;
+    if max_t > t_threshold_bananas
+    then ( Format.printf " Definitely not constant time.\n%!" ; Leakage_found )
+    else if max_t > t_threshold_moderate
+    then ( Format.printf " Probably not constant time.\n%!" ; Leakage_found )
+    else (* if max_t < t_threshold_moderate *)
+    ( Format.printf " For the moment, may be constant time.\n%!" ; No_leakage_evidence_yet )
+  end
 ;;
 
-let report ctx =
-  try report ctx
-  with Leakage_found -> `Leakage_found
-     | No_leakage_evidence_yet -> `No_leakage_evidence_yet
-
 let main ctx =
-  measure ctx ;
+  stabilize_gc () ; measure ctx ;
   let first_time = ctx.percentiles.(_number_percentiles - 1) = 0L in
   if first_time
-  then ( prepare_percentile ctx ; `No_leakage_evidence_yet )
+  then ( prepare_percentile ctx ; No_leakage_evidence_yet )
   else begin
     update_statistics ctx ;
     report ctx

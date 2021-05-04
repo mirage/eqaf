@@ -18,8 +18,8 @@ let prepare_inputs number_measurements chunk_size classes =
   Array.init number_measurements random
 
 let rec loop ctx = match Check.main ctx with
-  | `Leakage_found -> exit 1
-  | `No_leakage_evidence_yet -> loop ctx
+  | Leakage_found -> exit 1
+  | No_leakage_evidence_yet -> loop ctx
 
 let () =
   let config =
