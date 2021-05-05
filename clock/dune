@@ -12,5 +12,7 @@
 (library
  (name clock)
  (modules clock)
- (c_names clock_stubs)
- (c_flags (:include clock.sexp)))
+ (foreign_stubs
+  (language c)
+  (names clock_stubs)
+  (flags (:include clock.sexp))))
