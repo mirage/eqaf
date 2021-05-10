@@ -20,7 +20,7 @@ let () =
       | [|_; "--system"; system; "-o"; output|] ->
           let system =
             match system with
-            | "linux" -> `Linux
+            | "linux" | "elf" -> `Linux
             | "windows" | "mingw64" | "mingw" | "cygwin" -> `Windows
             | "macosx" -> `MacOSX
             | v ->
