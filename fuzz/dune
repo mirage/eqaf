@@ -4,5 +4,7 @@
 
 (rule
  (alias runtest)
- (deps (:fuzz fuzz.exe))
- (action (run %{fuzz})))
+ (deps
+  (:fuzz fuzz.exe))
+ (action
+  (run %{fuzz})))

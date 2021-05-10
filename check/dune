@@ -4,5 +4,7 @@
 
 (rule
  (alias runtest)
- (deps (:check check.exe))
- (action (run %{check})))
+ (deps
+  (:check check.exe))
+ (action
+  (run %{check})))
