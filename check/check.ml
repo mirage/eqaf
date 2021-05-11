@@ -107,9 +107,11 @@ let test_ccea fn_0 fn_1 =
     Fmt.epr "B²: %s.\n%!" err1 ;
     exit exit_failure
 
-let ccea ~name_of_fns_0 ~name_of_fns_1 fns_0 fns_1 =
+let ccea ~reset ~switch ~name_of_fns_0 ~name_of_fns_1 fns_0 fns_1 =
   Fmt.pr "> Start to test %s (B¹).\n%!" name_of_fns_0 ;
+  reset () ;
   let eqaf = test_ccea (fst fns_0) (snd fns_0) in
+  switch () ;
   Fmt.pr "> Start to test %s (B²).\n%!" name_of_fns_1 ;
   let stdlib = test_ccea (fst fns_1) (snd fns_1) in
   match eqaf, stdlib with
@@ -127,9 +129,11 @@ let ccea ~name_of_fns_0 ~name_of_fns_1 fns_0 fns_1 =
     Fmt.epr "B²> %s.\n%!" err1 ;
     Error ()
 
-let spss ~name_of_fns_0 ~name_of_fns_1 fns_0 fns_1 =
+let spss ~reset ~switch ~name_of_fns_0 ~name_of_fns_1 fns_0 fns_1 =
   Fmt.pr "> Start to test %s (B¹).\n%!" name_of_fns_0 ;
+  reset () ;
   let eqaf = test_spss (fst fns_0) (snd fns_0) in
+  switch () ;
   Fmt.pr "> Start to test %s (B²).\n%!" name_of_fns_1 ;
   let stdlib = test_spss (fst fns_1) (snd fns_1) in
 
@@ -245,6 +249,9 @@ module Make (Check : sig
     val eqaf_name : string
     val stdlib_name : string
 
+    val reset : unit -> unit
+    val switch : unit -> unit
+
     val eqaf_true : unit -> ret
     val eqaf_false : unit -> ret
 
@@ -256,6 +263,7 @@ module Make (Check : sig
   let last_chance () =
     let open Benchmark in
     match ccea
+            ~reset:Check.reset ~switch:Check.switch
             ~name_of_fns_0:eqaf_name
             ~name_of_fns_1:stdlib_name
             (V eqaf_true, V eqaf_false)
@@ -269,6 +277,7 @@ module Make (Check : sig
   let test () =
     let open Benchmark in
     match spss
+            ~reset:Check.reset ~switch:Check.switch
             ~name_of_fns_0:eqaf_name
             ~name_of_fns_1:stdlib_name
             (V eqaf_true, V eqaf_false)
@@ -289,6 +298,8 @@ module Equal = Make(struct
   let eqaf_name = "Eqaf.equal"
   let stdlib_name = "String.equal"
 
+  let reset = ignore and switch = ignore
+
   let stdlib_true () = String.equal hash_eq_0 hash_eq_1
   let stdlib_false () = String.equal hash_neq_0 hash_neq_1
   
@@ -301,6 +312,8 @@ module Compare = Make(struct
 
   let eqaf_name = "Eqaf.compare"
   let stdlib_name = "String.compare"
+
+  let reset = ignore and switch = ignore
 
   let stdlib_true () = String.compare hash_eq_0 hash_eq_1
   let stdlib_false () = String.compare hash_neq_0 hash_neq_1
@@ -315,12 +328,15 @@ module Exists = Make(struct
   let eqaf_name = "Eqaf.exists_uint8"
   let stdlib_name = "String.contains"
 
+  let constant = ref (Char.code chr_into_hash_eq_0)
+  let reset () = constant := Char.code chr_into_hash_eq_0
+  let switch () = constant := Char.code random_chr
+
   let stdlib_true () = String.contains hash_eq_0 chr_into_hash_eq_0
   let stdlib_false () = String.contains hash_neq_0 random_chr
 
-  let f (v : int) = v = Char.code chr_into_hash_eq_0
+  let f (v : int) = v = !constant
   let eqaf_true () = Eqaf.exists_uint8 ~f hash_eq_0
-  let f (v : int) = v = Char.code random_chr
   let eqaf_false () = Eqaf.exists_uint8 ~f hash_neq_0
 end)
 
