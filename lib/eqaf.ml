@@ -247,7 +247,23 @@ let divmod ~(x:int32) ~(m:int32) : int32 * int32 =
   let x_0 = x in
 
   let x_2, q_1 =
-    let v = Int32.unsigned_div Int32.min_int m |> of_uint32 in
+    let int32_div_unsigned n d =
+      (* can be replaced by Int32.unsigned_div
+       * from OCaml >= 4.10 *)
+      let sub,min_int = Int32.(sub,min_int)in
+      let int32_unsigned_compare n m =
+        Int32.compare (sub n min_int) (sub m min_int)
+      in
+      if d < 0_l then
+        if int32_unsigned_compare n d < 0 then 0_l else 1_l
+      else
+        let q =
+          let open Int32 in
+          shift_left (Int32.div (Int32.shift_right_logical n 1) d) 1 in
+        let r = sub n (Int32.mul q d) in
+        if int32_unsigned_compare r d >= 0 then Int32.succ q else q
+    in
+    let v = int32_div_unsigned Int32.min_int m |> of_uint32 in
     (*let v = 0x80_00_00_00 / m in*) (* floored div *)
     let x_1, q_0 =
       let qpart_0 =

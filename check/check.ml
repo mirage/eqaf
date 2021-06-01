@@ -356,6 +356,8 @@ module Find = Make(struct
   let eqaf_name = "Eqaf.find_uint8"
   let stdlib_name = "String.index"
 
+  let switch () = ()
+  let reset () = ()
 
   let stdlib_true () = String.index hash_eq_0 chr_into_hash_eq_0
   let stdlib_false () = String.index hash_neq_0 random_chr
@@ -372,15 +374,40 @@ module Divmod32 = Make(struct
   let eqaf_name = "Eqaf.divmod"
   let stdlib_name = "Int32.unsigned_div,Int32.unsigned_rem"
 
+
+  let switch () = ()
+  let reset () = ()
+
+  (* These are here for compat with OCaml <= 4.09
+     from >= they can be replaced by
+     Int32.unsigned_div
+     Int32.unsigned_rem
+  *)
+  let int32_div_unsigned n d =
+    let sub,min_int = Int32.(sub,min_int)in
+    let int32_unsigned_compare n m =
+        Int32.compare (sub n min_int) (sub m min_int)
+    in
+    if d < 0_l then
+      if int32_unsigned_compare n d < 0 then 0_l else 1_l
+    else
+      let q =
+        let open Int32 in
+        shift_left (Int32.div (Int32.shift_right_logical n 1) d) 1 in
+      let r = sub n (Int32.mul q d) in
+      if int32_unsigned_compare r d >= 0 then Int32.succ q else q
+  let int32_rem_unsigned n d =
+    Int32.sub n (Int32.mul (int32_div_unsigned n d) d)
+
   (* TODO *)
   let stdlib_true () =
     let x, m = int32_into_hash_eq_0, int14_into_hash_eq_0 in
-    Int32.unsigned_div x m,
-    Int32.unsigned_rem x m
+    int32_div_unsigned x m,
+    int32_rem_unsigned x m
   let stdlib_false () =
     let x, m = int32_into_hash_eq_1, int14_into_hash_eq_1 in
-    Int32.unsigned_div x m,
-    Int32.unsigned_rem x m
+    int32_div_unsigned x m,
+    int32_rem_unsigned x m
 
   let eqaf_true () =
     Eqaf.divmod ~x:int32_into_hash_eq_0 ~m:int14_into_hash_eq_0
@@ -393,6 +420,10 @@ module Ascii_int32 = Make(struct
 
   let eqaf_name = "Eqaf.ascii_of_int32"
   let stdlib_name = "Int32.to_string"
+
+
+  let switch () = ()
+  let reset () = ()
 
   (* TODO setting 0x8000 bit ensures five digits.
      We need a constant amount of digits to specify ~digits because

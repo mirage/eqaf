@@ -29,12 +29,34 @@ let () =
     (Eqaf.lowercase_ascii raw_str)
 
 let () =
+  (* These are here for compat with OCaml <= 4.09
+     from >= they can be replaced by
+     Int32.unsigned_div
+     Int32.unsigned_rem
+  *)
+  let int32_div_unsigned n d =
+    let sub,min_int = Int32.(sub,min_int)in
+    let int32_unsigned_compare n m =
+      Int32.compare (sub n min_int) (sub m min_int)
+    in
+    if d < 0_l then
+      if int32_unsigned_compare n d < 0 then 0_l else 1_l
+    else
+      let q =
+        let open Int32 in
+        shift_left (Int32.div (Int32.shift_right_logical n 1) d) 1 in
+      let r = sub n (Int32.mul q d) in
+      if int32_unsigned_compare r d >= 0 then Int32.succ q else q
+  in
+  let int32_rem_unsigned n d =
+    Int32.sub n (Int32.mul (int32_div_unsigned n d) d)
+  in
   add_test ~name:"divmod" [ int32 ; int32 ]
   @@ fun x m ->
   try
     let result = Eqaf.divmod ~x ~m in
-    let expect = Int32.unsigned_div x m,
-                 Int32.unsigned_rem x m in
+    let expect = int32_div_unsigned x m,
+                 int32_rem_unsigned x m in
     check_eq ~eq:(=) expect result
   with
   | Invalid_argument desc ->
