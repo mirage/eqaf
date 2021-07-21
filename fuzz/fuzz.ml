@@ -68,8 +68,8 @@ let () =
   @@ fun raw ->
   let enc = Eqaf.hex_of_string raw in
   let dec = Eqaf.string_of_hex enc in
-  check_eq ~pp:(fun fmt s -> Format.pp_print_string fmt @@ String.escaped s)
-    ~eq:(=) raw dec ;
+  check_eq ~pp:(fun fmt (s,err) -> Format.fprintf fmt "(%S,%d)" s err)
+    ~eq:(=) (raw,0) dec ;
   String.iter (function (* check for invalid encoding: *)
       | '0'..'9'
       | 'a'..'z'
@@ -80,26 +80,22 @@ let () =
   add_test ~name:"string_of_hex |> hex_of_string" [ bytes ]
   @@ fun hex ->
   begin
-    try begin
-      let dec = Eqaf.string_of_hex hex in
+    match Eqaf.string_of_hex hex with
+    | dec, 0 ->
       let enc = Eqaf.hex_of_string dec in
       check_eq ~pp:(fun fmt s -> Format.pp_print_string fmt @@ String.escaped s)
         ~eq:(=) (String.lowercase_ascii hex) enc ;
-    end
-    with Invalid_argument x ->
+    | _ ->
       let invalid = ref false in
       begin
         if (String.length hex mod 2 = 1)
-        && x = "hex length must be multiple of 2" then begin
-          invalid := true
-        end else begin if x = "decoding invalid hex" then
-            String.iter (function
-                | 'a'..'f'
-                | '0'..'9'
-                | 'A'..'F' -> ()
-                | _ -> invalid := true
-              ) hex ;
-        end ;
+        then invalid := true
+        else String.iter (function
+            | 'a'..'f'
+            | '0'..'9'
+            | 'A'..'F' -> ()
+            | _ -> invalid := true
+          ) hex
       end ; assert !invalid (* we expect it to be invalid since it raised *)
   end
 

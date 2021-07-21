@@ -86,7 +86,7 @@ let string_of_hex str hex expect =
        str hex expect
     ) `Quick @@ fun ()->
   let enc = Eqaf.string_of_hex hex in
-  Alcotest.(check string) str expect enc
+  Alcotest.(check @@ pair string int) str (expect,0) enc
 
 let hex_of_string str raw expect =
   Alcotest.test_case

@@ -349,9 +349,8 @@ let uppercase_ascii src =
     ) src
 
 let bytes_of_hex rawhex =
-  if 1 land (String.length rawhex) = 1 then
-    raise (Invalid_argument "hex length must be multiple of 2");
-  let error_bitmap = ref 0 in
+  (* hex length must be multiple of 2: *)
+  let error_bitmap = ref ((String.length rawhex land 1) lsl 4) in
   let decoded =
     Bytes.init (String.length rawhex lsr 1)
       (fun idx ->
@@ -382,8 +381,9 @@ let bytes_of_hex rawhex =
          char_chr ((nibf0 lsl 4) lor nib0f)
       )
   in
-  if !error_bitmap land 0xf0 <> 0
-  then raise (Invalid_argument "decoding invalid hex")
-  else decoded
+  (* if any non-nibble bits were set in !error_bitmap, decoding failed: *)
+  decoded, !error_bitmap land (lnot 0xf)
 
-let string_of_hex rawhex = Bytes.unsafe_to_string (bytes_of_hex rawhex)
+let string_of_hex rawhex =
+  let byt, error = bytes_of_hex rawhex in
+  Bytes.unsafe_to_string byt, error

@@ -180,29 +180,35 @@ val hex_of_bytes : bytes -> string
 val hex_of_string : string -> string
 (** [hex_of_string raw] is [hex_of_bytes raw] as a {!string} *)
 
-val bytes_of_hex : string -> bytes
-(** [bytes_of_hex hex] is [hex] decoded in constant time.
+val bytes_of_hex : string -> bytes * int
+(** [bytes_of_hex hex] is [raw, error] decoded in constant time.
     Can be used to e.g. decode secrets from configuration files.
     The {b contents can be secret}, but an attacker can learn
     the {b length of} [hex] by timing this function.
 
+    {b Error handling:} The second tuple element [error] is {b non-zero}
+    when the length of [hex] is not a multiple of 2,
+    or [hex] contains invalid characters.
+    Implementations should ensure that `error = 0` before using [raw].
+    The function signals errors this way to allow implementations to handle
+    invalid input errors in constant time.
+
     @param hex The hex-encoded octet string. Accepts characters [0-9 a-f A-F].
     Note that [0x] prefixes or whitespace are not accepted.
-
-    @raise Invalid_argument When the length of [hex] is not a multiple of 2, or [hex] contains invalid characters.
 
     Example:
     {[
       let serialized = "2d2d486924" in
-      let secret = string_of_hex serialized in
+      let secret, error = string_of_hex serialized in
+      assert (error = 0);
       (* secret is now [--Hi$] *)
     ]}
 *)
 
-val string_of_hex : string -> string
+val string_of_hex : string -> string * int
 (** [string_of_hex hex] is {!bytes_of_hex} [hex],
     but returning a {!type:string} instead of {!type:bytes}.
-    @raise Invalid_argument When the length of [hex] is not a multiple of 2, or [hex] contains invalid characters.
+    See {!bytes_of_hex} regarding handling of invalid input errors.
 *)
 
 (** {1 Low-level primitives} *)
