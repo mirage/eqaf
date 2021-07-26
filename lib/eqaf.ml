@@ -240,8 +240,8 @@ let divmod ~(x:int32) ~(m:int32) : int32 * int32 =
   let of_uint32 uint =
     (* apparently Int64.of_int32 sign-extends ... great... avoid that: *)
     let b = Bytes.make 8 '\x00' in
-    Bytes.set_int32_le b 0 uint ;
-    Bytes.get_int64_le b 0
+    Unsafe.set_int32_le b 0 uint ;
+    Unsafe.get_int64_le b 0
   in
 
   let x_0 = x in
