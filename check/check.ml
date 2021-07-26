@@ -360,7 +360,7 @@ module Find = Make(struct
   let reset () = ()
 
   let stdlib_true () = String.index hash_eq_0 chr_into_hash_eq_0
-  let stdlib_false () = String.index hash_neq_0 random_chr
+  let stdlib_false () = try String.index hash_neq_0 random_chr with Not_found -> (-1)
 
   let f_hash_eq_0 (v : int) = v = Char.code chr_into_hash_eq_0
   let f_random (v : int) = v = Char.code random_chr
