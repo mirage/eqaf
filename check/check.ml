@@ -41,14 +41,14 @@ let hash_eq_0 = random 4096
 let hash_eq_1 = Bytes.to_string (Bytes.of_string hash_eq_0)
 let chr_into_hash_eq_0 = hash_eq_0.[Random.int 4096]
 let int32_into_hash_eq_0 =
-  Bytes.get_int32_ne (Bytes.of_string hash_eq_0) (Random.int (4096-4))
+  Unsafe.get_int32_ne (Bytes.of_string hash_eq_0) (Random.int (4096-4))
 let int32_into_hash_eq_1 =
-  Bytes.get_int32_ne (Bytes.of_string hash_eq_1) (Random.int (4096-4))
+  Unsafe.get_int32_ne (Bytes.of_string hash_eq_1) (Random.int (4096-4))
 let int14_into_hash_eq_0 =
-  Bytes.get_int32_ne (Bytes.of_string hash_eq_0) (Random.int (4096-4))
+  Unsafe.get_int32_ne (Bytes.of_string hash_eq_0) (Random.int (4096-4))
   |> (Int32.logand 0xfffl)
 let int14_into_hash_eq_1 =
-  Bytes.get_int32_ne (Bytes.of_string hash_eq_1) (Random.int (4096-4))
+  Unsafe.get_int32_ne (Bytes.of_string hash_eq_1) (Random.int (4096-4))
   |> (Int32.logand 0xfffl)
 
 let () = assert (hash_eq_0 != hash_eq_1)
