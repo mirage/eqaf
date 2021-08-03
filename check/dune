@@ -1,5 +1,6 @@
 (executable
  (name check)
+ (modules check linear_algebra benchmark fmt unsafe)
  (libraries eqaf base64 clock))
 
 (rule
