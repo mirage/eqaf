@@ -3,6 +3,9 @@
  (libraries eqaf base64 clock))
 
 (rule
+ (copy %{read:../config/which-unsafe-file} unsafe.ml))
+
+(rule
  (alias runtest)
  (deps
   (:check check.exe))

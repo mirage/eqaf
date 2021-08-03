@@ -1,7 +1,10 @@
 (library
  (name eqaf)
  (public_name eqaf)
- (modules eqaf))
+ (modules unsafe eqaf))
+
+(rule
+ (copy %{read:../config/which-unsafe-file} unsafe.ml))
 
 (library
  (name eqaf_bigstring)

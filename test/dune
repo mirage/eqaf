@@ -5,6 +5,7 @@
 
 (rule
  (alias runtest)
+ (locks singleton)
  (deps
   (:test test.exe))
  (action
@@ -17,6 +18,7 @@
 
 (rule
  (alias runtest)
+ (locks singleton)
  (deps
   (:test test_branch.exe))
  (action
