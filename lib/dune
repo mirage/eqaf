@@ -8,12 +8,12 @@
 
 (library
  (name eqaf_bigstring)
- (public_name eqaf-bigstring)
+ (public_name eqaf.bigstring)
  (modules eqaf_bigstring)
  (libraries eqaf))
 
 (library
  (name eqaf_cstruct)
- (public_name eqaf-cstruct)
+ (public_name eqaf.cstruct)
  (modules eqaf_cstruct)
- (libraries cstruct eqaf-bigstring))
+ (libraries cstruct eqaf.bigstring))

@@ -5,5 +5,7 @@
 (rule
  (alias runtest)
  (package eqaf)
- (deps (:fuzz fuzz.exe))
- (action (run %{fuzz})))
+ (deps
+  (:fuzz fuzz.exe))
+ (action
+  (run %{fuzz})))
