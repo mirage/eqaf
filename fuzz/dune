@@ -4,6 +4,7 @@
 
 (rule
  (alias runtest)
+ (package eqaf)
  (deps
   (:fuzz fuzz.exe))
  (action

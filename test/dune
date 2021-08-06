@@ -6,6 +6,7 @@
 (rule
  (alias runtest)
  (locks singleton)
+ (package eqaf)
  (deps
   (:test test.exe))
  (action
@@ -19,6 +20,7 @@
 (rule
  (alias runtest)
  (locks singleton)
+ (package eqaf)
  (deps
   (:test test_branch.exe))
  (action

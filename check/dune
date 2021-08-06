@@ -8,6 +8,7 @@
 
 (rule
  (alias runbench)
+ (package eqaf)
  (deps
   (:check check.exe))
  (action
