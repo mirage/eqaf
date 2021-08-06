@@ -9,6 +9,8 @@ let load_file filename =
 
 let sexp_linux = "(-lrt)"
 
+let sexp_freebsd = "()"
+
 let sexp_windows = "()"
 
 let sexp_mach = "()"
@@ -22,6 +24,7 @@ let () =
             match system with
             | "linux" | "elf" -> `Linux
             | "windows" | "mingw64" | "mingw" | "cygwin" -> `Windows
+            | "freebsd" -> `FreeBSD
             | "macosx" -> `MacOSX
             | v ->
               if String.sub system 0 5 = "linux"
@@ -43,6 +46,10 @@ let () =
         ( load_file "clock_linux.ml"
         , load_file "clock_linux_stubs.c"
         , sexp_linux )
+    | `FreeBSD ->
+        ( load_file "clock_linux.ml"
+        , load_file "clock_linux_stubs.c"
+        , sexp_freebsd )
     | `Windows ->
         ( load_file "clock_windows.ml"
         , load_file "clock_windows_stubs.c"
