@@ -463,15 +463,28 @@ let () =
     let res = Divmod32.test () in
     if res = exit_success then tried else _4 (succ tried) in
 
+  let pr_bench name value = 
+    Fmt.pr {|{"results": [{"name": "eqaf", "metrics": [{"name": "%s", "value": %d}]}]}@.|} 
+      name value in
+  
   let _0 = _0 1 in
   Fmt.pr "%d trial(s) for Eqaf.equal.\n%!" _0 ;
+  pr_bench "equal" _0 ;
+
   let _1 = _1 1 in
   Fmt.pr "%d trial(s) for Eqaf.compare.\n%!" _1 ;
+  pr_bench "compare" _1 ;
+
   let _2 = _2 1 in
   Fmt.pr "%d trial(s) for Eqaf.exists.\n%!" _2 ;
+  pr_bench "exists" _2 ;
+
   let _3 = _3 1 in
   Fmt.pr "%d trial(s) for Eqaf.find_uint8.\n%!" _3 ;
+  pr_bench "find_uint8" _3 ;
+
   let _4 = _4 1 in
-  Fmt.pr "%d trial(s) for Eqaf.divmod.\n%!" _3 ;
+  Fmt.pr "%d trial(s) for Eqaf.divmod.\n%!" _4 ;
+  pr_bench "divmod" _4 ;
 
   exit exit_success
