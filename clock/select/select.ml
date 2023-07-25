@@ -23,7 +23,7 @@ let () =
           let system =
             match system with
             | "linux" | "elf" -> `Linux
-            | "windows" | "mingw64" | "mingw" | "cygwin" -> `Windows
+            | "win32" | "win64" | "mingw64" | "mingw" | "cygwin" -> `Windows
             | "freebsd" -> `FreeBSD
             | "macosx" -> `MacOSX
             | v ->
