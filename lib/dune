@@ -13,6 +13,12 @@
  (libraries eqaf))
 
 (library
+ (name eqaf_bytes)
+ (public_name eqaf.bytes)
+ (modules eqaf_bytes)
+ (libraries eqaf))
+
+(library
  (name eqaf_cstruct)
  (public_name eqaf.cstruct)
  (modules eqaf_cstruct)
