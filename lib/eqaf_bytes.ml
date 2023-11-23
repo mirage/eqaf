@@ -23,9 +23,9 @@ let compare_be a b =
   let b' = Bytes.unsafe_to_string b in
   Eqaf.compare_be a' b'
 
-let find_uint8 ?(off= 0) ~f b =
+let find_uint8 ?off ~f b =
   let str = Bytes.unsafe_to_string b in
-  Eqaf.find_uint8 ~off ~f str
+  Eqaf.find_uint8 ?off ~f str
 
 let exists_uint8 ?off ~f b =
   let str = Bytes.unsafe_to_string b in
