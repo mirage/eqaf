@@ -23,9 +23,12 @@ let () =
           let system =
             match system with
             | "linux" | "elf" -> `Linux
-            | "windows" | "mingw64" | "mingw" | "cygwin" -> `Windows
+            | "win32" | "win64" | "mingw64" | "mingw" | "cygwin" -> `Windows
             | "freebsd" -> `FreeBSD
             | "macosx" -> `MacOSX
+            | "beos" | "dragonfly" | "bsd" | "openbsd" | "netbsd" | "gnu"
+            | "solaris" | "unknown" ->
+              invalid_arg "Unsupported system: %s" system
             | v ->
               if String.sub system 0 5 = "linux"
               then `Linux
