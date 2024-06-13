@@ -14,7 +14,6 @@ This package provides an equal function on string in constant-time to avoid timi
 build: [
   [ "dune" "subst" ] {dev}
   [ "dune" "build" "-p" name "-j" jobs ]
-  [ "dune" "runtest" "-p" name "-j" "1" "--no-buffer" "--verbose" ] {with-test}
 ]
 
 depends: [
@@ -22,9 +21,4 @@ depends: [
   "dune"           {>= "2.0"}
   "cstruct"        {>= "1.1.0"}
   "eqaf"           {= version}
-  "base64"         {with-test}
-  "alcotest"       {with-test}
-  "crowbar"        {with-test}
-  "fmt"            {with-test & >= "0.8.7"}
-  "bechamel"       {with-test}
 ]
