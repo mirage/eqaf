@@ -20,6 +20,6 @@
 
 (library
  (name eqaf_cstruct)
- (public_name eqaf.cstruct)
+ (public_name eqaf-cstruct)
  (modules eqaf_cstruct)
  (libraries cstruct eqaf.bigstring))
