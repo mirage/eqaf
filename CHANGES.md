@@ -1,3 +1,10 @@
+### v0.10 2024-06-14 Kyoto (Japon)
+
+- Implement functions provided by `eqaf` on bytes (@FantomeBeignet, #41)
+- Choose the right clock on MSVC systems (@dra27, #40)
+- Fix the lower bounds about base64 (@hannesm, #45)
+- Split `eqaf` and `eqaf-cstruct` (@dinosaure, @hannesm, #43)
+
 ### v0.9 2022-07-24 Paris (France)
 
 - Add support of OCaml 5.00 (@kit-ty-kate, #37)
